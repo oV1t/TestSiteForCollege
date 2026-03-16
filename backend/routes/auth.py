@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
+from pydantic import BaseModel
 from sqlmodel import Session, select
 from models import User, UserRole
 from database import get_session
@@ -73,4 +74,24 @@ async def login_for_access_token(
 
 @router.get("/me")
 async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    group_name: Optional[str] = None
+
+@router.put("/me")
+async def update_user_me(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    if user_update.full_name is not None:
+        current_user.full_name = user_update.full_name
+    if user_update.group_name is not None:
+        current_user.group_name = user_update.group_name
+    
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
     return current_user

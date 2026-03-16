@@ -10,7 +10,9 @@
         <el-menu-item v-if="auth.isAdmin" index="/admin">Admin Panel</el-menu-item>
       </el-menu>
       <div class="user-info">
-        <span>{{ auth.user?.full_name }}</span>
+        <el-button link @click="$router.push('/profile')" class="profile-link">
+          {{ auth.user?.full_name }}
+        </el-button>
         <el-button link @click="logout">Logout</el-button>
       </div>
     </el-header>
@@ -55,5 +57,12 @@ const logout = () => {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+.profile-link {
+  font-size: 1rem;
+  color: #303133;
+}
+.profile-link:hover {
+  color: #409eff;
 }
 </style>
