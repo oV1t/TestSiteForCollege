@@ -4,6 +4,7 @@ import api from '../api';
 export const useDataStore = defineStore('data', {
     state: () => ({
         disciplines: [],
+        adminDisciplines: [],
         myChoices: [],
         stats: null,
     }),
@@ -23,6 +24,22 @@ export const useDataStore = defineStore('data', {
         async fetchStats() {
             const response = await api.get('/admin/stats');
             this.stats = response.data;
+        },
+        async fetchAdminDisciplines() {
+            const response = await api.get('/admin/disciplines');
+            this.adminDisciplines = response.data;
+        },
+        async createDiscipline(data) {
+            await api.post('/admin/disciplines', data);
+            await this.fetchAdminDisciplines();
+        },
+        async updateDiscipline(id, data) {
+            await api.put(`/admin/disciplines/${id}`, data);
+            await this.fetchAdminDisciplines();
+        },
+        async deleteDiscipline(id) {
+            await api.delete(`/admin/disciplines/${id}`);
+            await this.fetchAdminDisciplines();
         },
         async exportCsv() {
             const response = await api.get('/admin/export/csv', { responseType: 'blob' });

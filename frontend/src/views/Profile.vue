@@ -13,7 +13,7 @@
         <el-form-item label="Full Name" prop="full_name">
           <el-input v-model="form.full_name"></el-input>
         </el-form-item>
-        <el-form-item label="Group Name" prop="group_name">
+        <el-form-item label="Group Name" prop="group_name" v-if="auth.user?.role !== 'admin'">
           <el-input v-model="form.group_name"></el-input>
         </el-form-item>
         <el-form-item>

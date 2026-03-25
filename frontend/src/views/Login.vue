@@ -18,6 +18,21 @@
         <p class="hint">For MVP, just enter your email. An account will be created if it doesn't exist.</p>
       </el-form>
     </el-card>
+
+    <!-- Admin Password Dialog -->
+    <el-dialog title="Вхід адміністратора" v-model="adminDialogVisible" width="400px" center>
+      <el-form @submit.prevent="submitAdminLogin">
+        <el-form-item label="Пароль">
+          <el-input v-model="adminPassword" type="password" show-password placeholder="Введіть пароль" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="adminDialogVisible = false">Скасувати</el-button>
+          <el-button type="primary" :loading="loading" @click="submitAdminLogin">Вхід</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -30,6 +45,8 @@ import { ElMessage } from 'element-plus';
 const auth = useAuthStore();
 const router = useRouter();
 const loading = ref(false);
+const adminDialogVisible = ref(false);
+const adminPassword = ref('');
 
 const form = reactive({
   email: '',
@@ -37,15 +54,38 @@ const form = reactive({
 
 const handleLogin = async () => {
   if (!form.email) return;
-  loading.ref = true;
+  
+  if (form.email.toLowerCase() === 'admin@college.edu') {
+    adminDialogVisible.value = true;
+    return;
+  }
+  
+  await executeLogin(form.email, 'nopass');
+};
+
+const submitAdminLogin = async () => {
+  if (!adminPassword.value) {
+    ElMessage.warning('Введіть пароль');
+    return;
+  }
+  await executeLogin(form.email, adminPassword.value);
+};
+
+const executeLogin = async (email, password) => {
+  loading.value = true;
   try {
-    await auth.login(form.email);
-    ElMessage.success('Successfully logged in');
+    await auth.login(email, password);
+    ElMessage.success('Успішний вхід');
+    adminDialogVisible.value = false;
     router.push('/catalog');
   } catch (error) {
-    ElMessage.error('Login failed');
+    if (error.response?.status === 401) {
+      ElMessage.error('Неправильний пароль або облікові дані');
+    } else {
+      ElMessage.error('Помилка входу');
+    }
   } finally {
-    loading.ref = false;
+    loading.value = false;
   }
 };
 </script>

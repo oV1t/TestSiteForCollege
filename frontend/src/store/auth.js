@@ -11,11 +11,11 @@ export const useAuthStore = defineStore('auth', {
         isAdmin: (state) => state.user?.role === 'admin',
     },
     actions: {
-        async login(email) {
+        async login(email, password = 'nopass') {
             // Simplified login for MVP
             const formData = new FormData();
             formData.append('username', email);
-            formData.append('password', 'nopass'); // Not used in simplified auth
+            formData.append('password', password);
 
             try {
                 const response = await api.post('/auth/token', formData);

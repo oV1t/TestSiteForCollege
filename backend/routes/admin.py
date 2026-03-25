@@ -70,29 +70,73 @@ def export_choices_csv(
         headers={"Content-Disposition": "attachment; filename=elective_choices.csv"}
     )
 
-@router.post("/campaigns")
-def create_campaign(
-    name: str,
-    start_date: datetime,
-    end_date: datetime,
-    min_choices: int = 2,
-    max_choices: int = 3,
+from pydantic import BaseModel
+from typing import Optional
+
+class DisciplineCreate(BaseModel):
+    code: str
+    title: str
+    short_info: Optional[str] = None
+    doc_url: Optional[str] = None
+    active: bool = True
+
+class DisciplineUpdate(BaseModel):
+    code: Optional[str] = None
+    title: Optional[str] = None
+    short_info: Optional[str] = None
+    doc_url: Optional[str] = None
+    active: Optional[bool] = None
+
+@router.get("/disciplines", response_model=List[Discipline])
+def get_all_disciplines(
     session: Session = Depends(get_session),
     admin: User = Depends(require_admin)
 ):
-    # Deactivate other campaigns
-    session.exec(
-        select(Campaign).where(Campaign.active == True)
-    ).all() # Just to be safe, we could update them
-    
-    new_campaign = Campaign(
-        name=name,
-        start_date=start_date,
-        end_date=end_date,
-        min_choices=min_choices,
-        max_choices=max_choices,
-        active=True
-    )
-    session.add(new_campaign)
+    return session.exec(select(Discipline)).all()
+
+@router.post("/disciplines", response_model=Discipline)
+def create_discipline(
+    data: DisciplineCreate,
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin)
+):
+    new_discipline = Discipline(**data.model_dump())
+    session.add(new_discipline)
     session.commit()
-    return new_campaign
+    session.refresh(new_discipline)
+    return new_discipline
+
+@router.put("/disciplines/{discipline_id}", response_model=Discipline)
+def update_discipline(
+    discipline_id: int,
+    data: DisciplineUpdate,
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin)
+):
+    discipline = session.get(Discipline, discipline_id)
+    if not discipline:
+        raise HTTPException(status_code=404, detail="Discipline not found")
+    
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(discipline, key, value)
+    
+    discipline.updated_at = datetime.utcnow()
+    session.add(discipline)
+    session.commit()
+    session.refresh(discipline)
+    return discipline
+
+@router.delete("/disciplines/{discipline_id}")
+def delete_discipline(
+    discipline_id: int,
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin)
+):
+    discipline = session.get(Discipline, discipline_id)
+    if not discipline:
+        raise HTTPException(status_code=404, detail="Discipline not found")
+    
+    session.delete(discipline)
+    session.commit()
+    return {"ok": True}

@@ -65,6 +65,15 @@ async def login_for_access_token(
         session.add(user)
         session.commit()
         session.refresh(user)
+        
+    if user.role == UserRole.ADMIN:
+        admin_pass = os.getenv("ADMIN_PASSWORD", "admin123")
+        if form_data.password != admin_pass:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid admin password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
