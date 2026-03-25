@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: elective_disciplines
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: PASSWORD
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    mem_limit: 256m
+
+  backend:
+    build: ./backend
+    container_name: fastapi_app
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    mem_limit: 256m
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_web
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    mem_limit: 64m
+    restart: always
+
+volumes:
+  postgres_data:

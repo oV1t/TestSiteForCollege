@@ -2,7 +2,7 @@ from sqlmodel import create_engine, Session, SQLModel
 from sqlalchemy.orm import sessionmaker
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./elective_disciplines.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:PASSWORD@postgres:5432/elective_disciplines")
 
 engine = create_engine(
     DATABASE_URL, 
