@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlmodel import Session, select
 from typing import List
 from models import Choice, ChoiceSet, User, Campaign
@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.post("/submit")
 def submit_choices(
-    discipline_ids: List[int],
+    discipline_ids: List[int] = Body(...),
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
@@ -58,9 +58,18 @@ def get_my_choices(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
+    # Get active campaign
+    campaign = session.exec(select(Campaign).where(Campaign.active == True)).first()
+    if not campaign:
+        return []
+
     choice_set = session.exec(
-        select(ChoiceSet).where(ChoiceSet.user_id == current_user.id)
+        select(ChoiceSet).where(
+            ChoiceSet.user_id == current_user.id,
+            ChoiceSet.campaign_id == campaign.id
+        )
     ).first()
+    
     if not choice_set:
         return []
     
@@ -68,5 +77,6 @@ def get_my_choices(
         {
             "priority": c.priority,
             "discipline": c.discipline
-        } for c in choice_set.choices
+        } for c in sorted(choice_set.choices, key=lambda x: x.priority)
     ]
+

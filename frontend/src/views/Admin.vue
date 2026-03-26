@@ -4,7 +4,10 @@
       <el-tab-pane label="Статистика">
         <div class="card-header">
           <h2>Аналітика вибору</h2>
-          <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
+          <div class="actions">
+            <el-button type="danger" plain @click="handleReset">Очистити всі вибори</el-button>
+            <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
+          </div>
         </div>
         <el-table :data="dataStore.stats?.discipline_stats" border stripe v-if="dataStore.stats">
           <el-table-column prop="code" label="Код" width="100" />
@@ -158,6 +161,25 @@ const saveDiscipline = async () => {
   }
 };
 
+const handleReset = () => {
+  ElMessageBox.confirm(
+    'Це видалить УСІ вибори студентів з бази даних. Ця дія незворотна. Продовжити?',
+    'Скидання системи',
+    {
+      confirmButtonText: 'Так, очистити все',
+      cancelButtonText: 'Скасувати',
+      type: 'error',
+    }
+  ).then(async () => {
+    try {
+      const res = await dataStore.resetChoices();
+      ElMessage.success(res.message);
+    } catch (error) {
+      ElMessage.error('Помилка при очищенні даних');
+    }
+  }).catch(() => {});
+};
+
 const handleDelete = (id) => {
   ElMessageBox.confirm('Ви впевнені, що хочете видалити цю дисципліну?', 'Увага', {
     confirmButtonText: 'Так',
@@ -165,8 +187,8 @@ const handleDelete = (id) => {
     type: 'warning',
   }).then(async () => {
     try {
-      await dataStore.deleteDiscipline(id);
-      ElMessage.success('Видалено успішно');
+      const res = await dataStore.deleteDiscipline(id);
+      ElMessage.success(res.message || 'Видалено успішно');
       dataStore.fetchStats();
     } catch (error) {
       ElMessage.error('Помилка під час видалення');

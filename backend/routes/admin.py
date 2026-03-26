@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select, func, SQLModel
+from sqlalchemy.exc import IntegrityError
 from typing import List
 import io
 import csv
@@ -137,6 +138,29 @@ def delete_discipline(
     if not discipline:
         raise HTTPException(status_code=404, detail="Discipline not found")
     
-    session.delete(discipline)
-    session.commit()
-    return {"ok": True}
+    try:
+        session.delete(discipline)
+        session.commit()
+        return {"ok": True, "message": "Discipline deleted successfully"}
+    except IntegrityError:
+        session.rollback()
+        # Fallback to soft delete
+        discipline.active = False
+        session.add(discipline)
+        session.commit()
+        return {"ok": True, "message": "Discipline deactivated (cannot be deleted due to existing student choices)"}
+
+@router.post("/choices/clear")
+def clear_all_choices(
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin)
+):
+    try:
+        session.exec(SQLModel.metadata.tables["choice"].delete())
+        session.exec(SQLModel.metadata.tables["choiceset"].delete())
+        session.commit()
+        return {"ok": True, "message": "All student choices have been cleared"}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+

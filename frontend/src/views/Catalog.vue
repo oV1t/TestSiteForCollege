@@ -1,55 +1,72 @@
 <template>
   <div class="catalog">
-    <el-row :gutter="20">
-      <el-col v-for="discipline in dataStore.disciplines" :key="discipline.id" :xs="24" :sm="12" :md="8">
-        <el-card class="discipline-card">
-          <template #header>
-            <div class="card-header">
-              <span class="code">{{ discipline.code }}</span>
-              <span class="title">{{ discipline.title }}</span>
+    <div class="catalog-header">
+      <h1>Каталог вибіркових дисциплін</h1>
+      <p>Оберіть 2 або 3 пріоритетні дисципліни для вашого навчання</p>
+    </div>
+
+    <el-row :gutter="24">
+      <el-col v-for="discipline in dataStore.disciplines" :key="discipline.id" :xs="24" :sm="12" :lg="8">
+        <el-card class="discipline-card" shadow="hover">
+          <div class="card-content">
+            <div class="header-row">
+              <el-tag effect="dark" type="info" class="code-tag">{{ discipline.code }}</el-tag>
+              <h3 class="discipline-title">{{ discipline.title }}</h3>
             </div>
-          </template>
-          <p class="description">{{ discipline.short_info }}</p>
-          <div class="actions">
-            <el-button link type="primary" @click="openDoc(discipline.doc_url)">Read Details</el-button>
-            <el-button 
-              type="success" 
-              plain 
-              @click="toggleSelection(discipline.id)"
-              :disabled="isSelected(discipline.id) && !canAddMore"
-            >
-              {{ isSelected(discipline.id) ? 'Selected' : 'Select' }}
-            </el-button>
+            
+            <div class="description-container">
+              <p class="description">{{ discipline.short_info || 'Опис дисципліни відсутній.' }}</p>
+            </div>
+
+            <div class="card-footer">
+              <el-button link type="primary" class="details-btn" @click="openDoc(discipline.doc_url)">
+                Детальніше
+              </el-button>
+              <el-button 
+                :type="dataStore.isSelected(discipline.id) ? 'success' : 'primary'"
+                :plain="!dataStore.isSelected(discipline.id)"
+                class="select-btn"
+                @click="toggleSelection(discipline.id)"
+                :disabled="!dataStore.isSelected(discipline.id) && !dataStore.canAddMore"
+              >
+                {{ dataStore.isSelected(discipline.id) ? 'Обрано' : 'Обрати' }}
+              </el-button>
+            </div>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <div class="selection-fab" v-if="selectedIds.length > 0">
-      <el-button type="primary" size="large" @click="showConfirm = true">
-        Submit Selection ({{ selectedIds.length }})
+    <div class="selection-fab" v-if="dataStore.selectedIds.length > 0">
+      <el-button type="primary" size="large" class="submit-fab" @click="showConfirm = true">
+        Підтвердити вибір ({{ dataStore.selectedIds.length }})
       </el-button>
     </div>
 
-    <el-dialog v-model="showConfirm" title="Confirm Choice" width="30%">
-      <div v-for="(id, index) in selectedIds" :key="id" class="priority-item">
-        <span>Priority {{ index + 1 }}: {{ getTitle(id) }}</span>
+    <el-dialog v-model="showConfirm" title="Підтвердження вибору" width="400px" center>
+      <div class="confirm-list">
+        <p>Ваші обрані дисципліни за пріоритетністю:</p>
+        <div v-for="(id, index) in dataStore.selectedIds" :key="id" class="priority-item">
+          <span class="priority-badge">{{ index + 1 }}</span>
+          <span class="item-title">{{ getTitle(id) }}</span>
+        </div>
       </div>
       <template #footer>
-        <el-button @click="showConfirm = false">Cancel</el-button>
-        <el-button type="primary" @click="submitChoices" :loading="submitting">Confirm</el-button>
+        <div class="dialog-footer">
+          <el-button @click="showConfirm = false">Скасувати</el-button>
+          <el-button type="primary" @click="submitChoices" :loading="submitting">Відправити</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useDataStore } from '../store/data';
 import { ElMessage } from 'element-plus';
 
 const dataStore = useDataStore();
-const selectedIds = ref([]);
 const showConfirm = ref(false);
 const submitting = ref(false);
 
@@ -57,17 +74,10 @@ onMounted(() => {
   dataStore.fetchDisciplines();
 });
 
-const isSelected = (id) => selectedIds.value.includes(id);
-const canAddMore = computed(() => selectedIds.value.length < 3);
-
 const toggleSelection = (id) => {
-  const index = selectedIds.value.indexOf(id);
-  if (index > -1) {
-    selectedIds.value.splice(index, 1);
-  } else if (canAddMore.value) {
-    selectedIds.value.push(id);
-  } else {
-    ElMessage.warning('Maximum 3 disciplines allowed');
+  const success = dataStore.toggleSelection(id);
+  if (!success) {
+    ElMessage.warning('Максимум можна обрати 3 дисципліни');
   }
 };
 
@@ -80,18 +90,17 @@ const openDoc = (url) => {
 };
 
 const submitChoices = async () => {
-  if (selectedIds.value.length < 2) {
-    ElMessage.warning('Select at least 2 disciplines');
+  if (dataStore.selectedIds.length < 2) {
+    ElMessage.warning('Оберіть принаймні 2 дисципліни');
     return;
   }
   submitting.value = true;
   try {
-    await dataStore.submitChoices(selectedIds.value);
-    ElMessage.success('Choices submitted successfully');
-    showConfirm.ref = false;
-    selectedIds.value = [];
+    await dataStore.submitChoices(dataStore.selectedIds);
+    ElMessage.success('Вибір успішно збережено');
+    showConfirm.value = false;
   } catch (error) {
-    ElMessage.error(error.response?.data?.detail || 'Submission failed');
+    ElMessage.error(error.response?.data?.detail || 'Помилка при збереженні');
   } finally {
     submitting.value = false;
   }
@@ -100,47 +109,177 @@ const submitChoices = async () => {
 
 <style scoped>
 .catalog {
-  padding: 1rem;
+  padding: 2rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 60px);
 }
+
+.catalog-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.catalog-header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.catalog-header p {
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
 .discipline-card {
-  margin-bottom: 20px;
-  height: 200px;
+  margin-bottom: 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
 }
-.card-header {
+
+.discipline-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1) !important;
+  border-color: #3b82f6;
+}
+
+.card-content {
+  padding: 8px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  height: 100%;
+  min-height: 220px;
 }
-.code {
-  font-weight: bold;
-  color: #909399;
+
+.header-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
 }
-.title {
-  font-weight: bold;
+
+.code-tag {
+  width: fit-content;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0 12px;
+  border-radius: 8px;
 }
-.description {
+
+.discipline-title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #1e293b;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.description-container {
   flex-grow: 1;
-  color: #606266;
-  font-size: 0.9rem;
+  margin-bottom: 20px;
 }
-.actions {
+
+.description {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 1rem;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
 }
+
+.details-btn {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.select-btn {
+  padding: 0 24px;
+  height: 40px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
 .selection-fab {
   position: fixed;
   bottom: 40px;
   right: 40px;
   z-index: 100;
 }
+
+.submit-fab {
+  height: 56px !important;
+  padding: 0 32px !important;
+  border-radius: 28px !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4) !important;
+}
+
+.confirm-list {
+  padding: 10px 0;
+}
+
+.confirm-list p {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #64748b;
+}
+
 .priority-item {
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #f0f2f5;
-  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.priority-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.item-title {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>
