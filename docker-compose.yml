@@ -19,6 +19,10 @@ services:
   backend:
     build: ./backend
     container_name: fastapi_app
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:PASSWORD@postgres:5432/elective_disciplines
     depends_on:
       - postgres
     ports:

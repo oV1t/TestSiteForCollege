@@ -13,6 +13,7 @@ class User(SQLModel, table=True):
     full_name: str
     group_name: Optional[str] = None
     role: UserRole = Field(default=UserRole.STUDENT)
+    hashed_password: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     choice_sets: List["ChoiceSet"] = Relationship(back_populates="user")

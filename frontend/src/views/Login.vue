@@ -7,32 +7,21 @@
         </div>
       </template>
       <el-form :model="form" label-position="top" @submit.prevent="handleLogin">
-        <el-form-item label="College Email">
+        <el-form-item label="Електронна пошта">
           <el-input v-model="form.email" placeholder="example@college.edu" />
+        </el-form-item>
+        <el-form-item label="Пароль">
+          <el-input v-model="form.password" type="password" show-password placeholder="Ваш пароль" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" block native-type="submit" :loading="loading" class="login-btn">
-            Login / Continue
+            Увійти
           </el-button>
         </el-form-item>
-        <p class="hint">For MVP, just enter your email. An account will be created if it doesn't exist.</p>
+        <p class="hint">Пароль за замовчуванням для студентів: <code>password123</code></p>
       </el-form>
     </el-card>
 
-    <!-- Admin Password Dialog -->
-    <el-dialog title="Вхід адміністратора" v-model="adminDialogVisible" width="400px" center>
-      <el-form @submit.prevent="submitAdminLogin">
-        <el-form-item label="Пароль">
-          <el-input v-model="adminPassword" type="password" show-password placeholder="Введіть пароль" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="adminDialogVisible = false">Скасувати</el-button>
-          <el-button type="primary" :loading="loading" @click="submitAdminLogin">Вхід</el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -50,39 +39,25 @@ const adminPassword = ref('');
 
 const form = reactive({
   email: '',
+  password: '',
 });
 
 const handleLogin = async () => {
-  if (!form.email) return;
-  
-  if (form.email.toLowerCase() === 'admin@college.edu') {
-    adminDialogVisible.value = true;
+  if (!form.email || !form.password) {
+    ElMessage.warning('Введіть email та пароль');
     return;
   }
   
-  await executeLogin(form.email, 'nopass');
-};
-
-const submitAdminLogin = async () => {
-  if (!adminPassword.value) {
-    ElMessage.warning('Введіть пароль');
-    return;
-  }
-  await executeLogin(form.email, adminPassword.value);
-};
-
-const executeLogin = async (email, password) => {
   loading.value = true;
   try {
-    await auth.login(email, password);
+    await auth.login(form.email, form.password);
     ElMessage.success('Успішний вхід');
-    adminDialogVisible.value = false;
     router.push('/catalog');
   } catch (error) {
     if (error.response?.status === 401) {
-      ElMessage.error('Неправильний пароль або облікові дані');
+      ElMessage.error('Неправильний email або пароль');
     } else {
-      ElMessage.error('Помилка входу');
+      ElMessage.error('Помилка входу. Переконайтеся, що сервер запущено.');
     }
   } finally {
     loading.value = false;

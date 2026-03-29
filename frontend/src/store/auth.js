@@ -8,7 +8,14 @@ export const useAuthStore = defineStore('auth', {
     }),
     getters: {
         isAuthenticated: (state) => !!state.token,
-        isAdmin: (state) => state.user?.role === 'admin',
+        isAdmin(state) {
+            console.log('Checking isAdmin for user:', state.user);
+            if (!state.user || !state.user.role) return false;
+            // Robust case-insensitive check
+            const role = String(state.user.role).toLowerCase().trim();
+            console.log('Current user role string:', role);
+            return role === 'admin';
+        },
     },
     actions: {
         async login(email, password = 'nopass') {

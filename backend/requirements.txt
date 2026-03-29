@@ -5,6 +5,7 @@ sqlalchemy
 pydantic-settings
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt==4.0.1
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
@@ -13,3 +14,4 @@ pandas
 openpyxl
 python-multipart
 psycopg2-binary
+alembic

@@ -7,7 +7,16 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 from models import User, UserRole
 from database import get_session
+from passlib.context import CryptContext
 import os
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 router = APIRouter()
 
@@ -56,34 +65,27 @@ async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session)
 ):
-    # This is a simplified login for MVP. 
-    # In a real app, you would verify against Google OAuth or a hashed password.
     user = session.exec(select(User).where(User.email == form_data.username)).first()
-    if not user:
-        # Auto-create user for development if it's the first time
-        user = User(email=form_data.username, full_name=form_data.username.split('@')[0], role=UserRole.STUDENT)
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-        
-    if user.role == UserRole.ADMIN:
-        admin_pass = os.getenv("ADMIN_PASSWORD", "admin123")
-        if form_data.password != admin_pass:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid admin password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+    
+    if not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неправильний email або пароль",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires
+        data={"sub": user.email, "role": str(user.role.value if hasattr(user.role, 'value') else user.role)}, 
+        expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me")
 async def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
+    user_data = current_user.model_dump(exclude={"hashed_password"})
+    user_data["role"] = str(current_user.role.value if hasattr(current_user.role, 'value') else current_user.role)
+    return user_data
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None

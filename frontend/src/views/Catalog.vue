@@ -265,8 +265,8 @@ const submitChoices = async () => {
   width: 28px;
   height: 28px;
   background-color: #3b82f6;
-  color: white;
-  border-radius: 50%;
+  color: rgb(0, 0, 0);
+  border-radius: 10%;
   font-weight: 700;
   font-size: 0.85rem;
 }

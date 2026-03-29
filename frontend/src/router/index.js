@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../store/auth';
+import Admin from '../views/Admin.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -38,7 +39,7 @@ const router = createRouter({
                 {
                     path: 'admin',
                     name: 'Admin',
-                    component: () => import('../views/Admin.vue'),
+                    component: Admin,
                     meta: { requiresAdmin: true },
                 },
             ],
@@ -48,15 +49,27 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
     const auth = useAuthStore();
+    console.log(`Navigating to: ${to.path}`, { 
+        requiresAuth: to.meta.requiresAuth, 
+        requiresAdmin: to.meta.requiresAdmin,
+        isAuthenticated: auth.isAuthenticated,
+        isAdmin: auth.isAdmin,
+        user: auth.user
+    });
+
     if (!auth.user && auth.token) {
+        console.log('User not present but token exists, fetching...');
         await auth.fetchUser();
     }
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
+        console.log('Access denied: requires auth. Redirecting to /login');
         next('/login');
     } else if (to.meta.requiresAdmin && !auth.isAdmin) {
+        console.log('Access denied: requires admin. Redirecting to /');
         next('/');
     } else {
+        console.log('Access granted');
         next();
     }
 });

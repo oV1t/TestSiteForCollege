@@ -78,7 +78,7 @@
 
 <script setup>
 import { onMounted, ref, reactive } from 'vue';
-import { useDataStore } from '../store/data';
+import { useDataStore } from '../store/data'; /* Removed .js extension */
 import { ElMessage, ElMessageBox } from 'element-plus';
 
 const dataStore = useDataStore();
@@ -96,8 +96,8 @@ const form = reactive({
 });
 
 onMounted(() => {
-  dataStore.fetchStats();
-  dataStore.fetchAdminDisciplines();
+  dataStore.fetchStats().catch(err => console.error('Failed to fetch stats:', err));
+  dataStore.fetchAdminDisciplines().catch(err => console.error('Failed to fetch disciplines:', err));
 });
 
 const exportCsv = async () => {

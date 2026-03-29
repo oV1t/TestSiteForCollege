@@ -2,20 +2,26 @@ from datetime import datetime, timedelta
 from sqlmodel import Session, select, SQLModel
 from models import Campaign, Discipline, User, UserRole
 from database import engine, create_db_and_tables
+from routes.auth import get_password_hash
 
 def seed_data():
     create_db_and_tables()
     with Session(engine) as session:
-        # Clear existing data for a fresh start
-        session.exec(SQLModel.metadata.tables["choice"].delete())
-        session.exec(SQLModel.metadata.tables["choiceset"].delete())
-        session.exec(SQLModel.metadata.tables["discipline"].delete())
-        session.exec(SQLModel.metadata.tables["campaign"].delete())
-        session.exec(SQLModel.metadata.tables["user"].delete())
+        # Clear existing data for a fresh start safely
+        for table in reversed(SQLModel.metadata.sorted_tables):
+            try:
+                session.exec(table.delete())
+            except Exception as e:
+                print(f"Skipping detailed delete for {table.name}: {e}")
         session.commit()
 
         # Create Admin
-        admin = User(email="admin@college.edu", full_name="Адміністратор", role=UserRole.ADMIN)
+        admin = User(
+            email="admin@college.edu", 
+            full_name="Адміністратор", 
+            role=UserRole.ADMIN,
+            hashed_password=get_password_hash("admin123")
+        )
         session.add(admin)
 
         # Create Campaign
@@ -120,12 +126,13 @@ def seed_data():
             session.add(d)
 
         # Create Sample Students
+        default_password = get_password_hash("password123")
         students = [
-            User(email="student1@college.edu", full_name="Іваненко Іван", group_name="КН-21", role=UserRole.STUDENT),
-            User(email="student2@college.edu", full_name="Петренко Петро", group_name="КН-21", role=UserRole.STUDENT),
-            User(email="student3@college.edu", full_name="Сидоренко Марія", group_name="ПР-32", role=UserRole.STUDENT),
-            User(email="student4@college.edu", full_name="Коваленко Олена", group_name="ПР-32", role=UserRole.STUDENT),
-            User(email="student5@college.edu", full_name="Бондаренко Андрій", group_name="КС-41", role=UserRole.STUDENT),
+            User(email="student1@college.edu", full_name="Іваненко Іван", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student2@college.edu", full_name="Петренко Петро", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student3@college.edu", full_name="Сидоренко Марія", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student4@college.edu", full_name="Коваленко Олена", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student5@college.edu", full_name="Бондаренко Андрій", group_name="КС-41", role=UserRole.STUDENT, hashed_password=default_password),
         ]
         for s in students:
             session.add(s)
