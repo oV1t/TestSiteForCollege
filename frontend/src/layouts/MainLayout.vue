@@ -4,17 +4,22 @@
       <div class="logo">
         <img src="../assets/logo.svg" alt="ElectiveChoice" style="height: 40px; display: block;" />
       </div>
-      <el-menu mode="horizontal" router :default-active="$route.path" class="menu">
-        <el-menu-item index="/catalog">Catalog</el-menu-item>
-        <el-menu-item index="/my-choices">My Choices</el-menu-item>
-        <el-menu-item v-if="auth.isAdmin" index="/admin">Admin Panel</el-menu-item>
+      <el-menu mode="horizontal" router :default-active="$route.path" class="menu" :key="isAdmin">
+        <template v-if="isAdmin === false">
+          <el-menu-item index="/catalog">Catalog</el-menu-item>
+          <el-menu-item index="/my-choices">My Choices</el-menu-item>
+        </template>
+        <el-menu-item v-if="isAdmin === true" index="/admin">Admin Panel</el-menu-item>
       </el-menu>
       <div class="user-info">
         <div class="profile-pill" @click="$router.push('/profile')">
           <el-avatar :size="32" class="avatar">
             {{ auth.user?.full_name?.charAt(0)?.toUpperCase() || 'U' }}
           </el-avatar>
-          <span class="user-name">{{ auth.user?.full_name || 'Profile' }}</span>
+          <span class="user-name">
+            {{ auth.user?.full_name || 'Profile' }}
+            <el-tag v-if="isAdmin" size="small" type="danger" effect="dark" style="margin-left: 5px;">ADMIN</el-tag>
+          </span>
         </div>
         <el-tooltip content="Logout" placement="bottom">
           <el-button class="logout-btn" circle @click="logout">
@@ -30,12 +35,15 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useAuthStore } from '../store/auth';
 import { useRouter } from 'vue-router';
 import { LogOut } from 'lucide-vue-next';
 
 const auth = useAuthStore();
 const router = useRouter();
+
+const isAdmin = computed(() => auth.isAdmin);
 
 const logout = () => {
   auth.logout();

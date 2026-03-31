@@ -68,6 +68,9 @@ router.beforeEach(async (to, from, next) => {
     } else if (to.meta.requiresAdmin && !auth.isAdmin) {
         console.log('Access denied: requires admin. Redirecting to /');
         next('/');
+    } else if (auth.isAdmin && (to.path === '/catalog' || to.path === '/my-choices' || to.path === '/')) {
+        console.log('Admin accessing student page, redirecting to /admin');
+        next('/admin');
     } else {
         console.log('Access granted');
         next();

@@ -52,7 +52,11 @@ const handleLogin = async () => {
   try {
     await auth.login(form.email, form.password);
     ElMessage.success('Успішний вхід');
-    router.push('/catalog');
+    if (auth.isAdmin) {
+      router.push('/admin');
+    } else {
+      router.push('/catalog');
+    }
   } catch (error) {
     if (error.response?.status === 401) {
       ElMessage.error('Неправильний email або пароль');

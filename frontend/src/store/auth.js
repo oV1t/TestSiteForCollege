@@ -9,11 +9,13 @@ export const useAuthStore = defineStore('auth', {
     getters: {
         isAuthenticated: (state) => !!state.token,
         isAdmin(state) {
-            console.log('Checking isAdmin for user:', state.user);
-            if (!state.user || !state.user.role) return false;
-            // Robust case-insensitive check
-            const role = String(state.user.role).toLowerCase().trim();
-            console.log('Current user role string:', role);
+            if (!state.user) return false;
+            // Get role string regardless of if it's a string or an enum object with .value
+            const rawRole = state.user.role?.value || state.user.role;
+            if (!rawRole) return false;
+            
+            const role = String(rawRole).toLowerCase().trim();
+            console.log('Detected user role:', role);
             return role === 'admin';
         },
     },
