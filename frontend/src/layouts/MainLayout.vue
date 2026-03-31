@@ -18,7 +18,6 @@
           </el-avatar>
           <span class="user-name">
             {{ auth.user?.full_name || 'Profile' }}
-            <el-tag v-if="isAdmin" size="small" type="danger" effect="dark" style="margin-left: 5px;">ADMIN</el-tag>
           </span>
         </div>
         <el-tooltip content="Logout" placement="bottom">

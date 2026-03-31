@@ -27,6 +27,17 @@ def get_stats(
         count_p1 = session.exec(select(func.count(Choice.id)).where(Choice.discipline_id == d.id, Choice.priority == 1)).one()
         count_p2 = session.exec(select(func.count(Choice.id)).where(Choice.discipline_id == d.id, Choice.priority == 2)).one()
         count_p3 = session.exec(select(func.count(Choice.id)).where(Choice.discipline_id == d.id, Choice.priority == 3)).one()
+        
+        # New: Group breakdown (Total for all priorities)
+        group_counts = session.exec(
+            select(User.group_name, func.count(Choice.id))
+            .join(ChoiceSet, ChoiceSet.user_id == User.id)
+            .join(Choice, Choice.choice_set_id == ChoiceSet.id)
+            .where(Choice.discipline_id == d.id)
+            .group_by(User.group_name)
+        ).all()
+        
+        group_stats = [{"group": g, "count": c} for g, c in group_counts if g]
         stats.append({
             "id": d.id,
             "code": d.code,
@@ -34,7 +45,8 @@ def get_stats(
             "priority1": count_p1,
             "priority2": count_p2,
             "priority3": count_p3,
-            "total": count_p1 + count_p2 + count_p3
+            "total": count_p1 + count_p2 + count_p3,
+            "group_stats": group_stats
         })
     
     return {

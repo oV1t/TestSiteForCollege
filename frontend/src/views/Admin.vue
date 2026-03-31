@@ -9,7 +9,18 @@
             <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
           </div>
         </div>
-        <el-table :data="dataStore.stats?.discipline_stats" border stripe v-if="dataStore.stats">
+        <el-table :data="dataStore.stats?.discipline_stats" border stripe v-if="dataStore.stats" :key="dataStore.stats?.discipline_stats?.length">
+          <el-table-column type="expand">
+            <template #default="props">
+              <div class="group-stats-box">
+                <h4>Розподіл по групах:</h4>
+                <el-table :data="props.row.group_stats" size="small" border style="width: 100%; max-width: 400px;">
+                  <el-table-column prop="group" label="Група" />
+                  <el-table-column prop="count" label="Кількість студентів" align="center" />
+                </el-table>
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column prop="code" label="Код" width="100" />
           <el-table-column prop="title" label="Назва" />
           <el-table-column prop="priority1" label="Пріор. 1" width="100" align="center" />
@@ -213,5 +224,15 @@ const handleDelete = (id) => {
 .summary {
   margin-top: 1.5rem;
   font-size: 1.1rem;
+}
+.group-stats-box {
+  padding: 1rem 2rem;
+  background-color: #f8fafc;
+  border-radius: 4px;
+}
+.group-stats-box h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #64748b;
 }
 </style>
