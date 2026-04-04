@@ -19,3 +19,8 @@ Thumbs.db
 
 # Node.js
 node_modules/
+dist/
+.vscode/
+
+# API credentials and sensitive data
+api/

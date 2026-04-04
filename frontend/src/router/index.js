@@ -11,6 +11,11 @@ const router = createRouter({
             component: () => import('../views/Login.vue'),
         },
         {
+            path: '/admin/login',
+            name: 'AdminLogin',
+            component: () => import('../views/AdminLogin.vue'),
+        },
+        {
             path: '/',
             name: 'Layout',
             component: () => import('../layouts/MainLayout.vue'),
@@ -63,8 +68,13 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
-        console.log('Access denied: requires auth. Redirecting to /login');
-        next('/login');
+        if (to.path.startsWith('/admin')) {
+            console.log('Admin access denied: redirecting to /admin/login');
+            next('/admin/login');
+        } else {
+            console.log('Student access denied: redirecting to /login');
+            next('/login');
+        }
     } else if (to.meta.requiresAdmin && !auth.isAdmin) {
         console.log('Access denied: requires admin. Redirecting to /');
         next('/');

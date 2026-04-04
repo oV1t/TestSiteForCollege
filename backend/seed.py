@@ -17,7 +17,7 @@ def seed_data():
 
         # Create Admin
         admin = User(
-            email="admin@college.edu", 
+            email="admin@rcit.ukr.education", 
             full_name="Адміністратор", 
             role=UserRole.ADMIN,
             hashed_password=get_password_hash("admin123")
@@ -128,11 +128,11 @@ def seed_data():
         # Create Sample Students
         default_password = get_password_hash("password123")
         students = [
-            User(email="student1@college.edu", full_name="Іваненко Іван", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student2@college.edu", full_name="Петренко Петро", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student3@college.edu", full_name="Сидоренко Марія", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student4@college.edu", full_name="Коваленко Олена", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student5@college.edu", full_name="Бондаренко Андрій", group_name="КС-41", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student1@rcit.ukr.education", full_name="Іваненко Іван", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student2@rcit.ukr.education", full_name="Петренко Петро", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student3@rcit.ukr.education", full_name="Сидоренко Марія", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student4@rcit.ukr.education", full_name="Коваленко Олена", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
+            User(email="student5@rcit.ukr.education", full_name="Бондаренко Андрій", group_name="КС-41", role=UserRole.STUDENT, hashed_password=default_password),
         ]
         for s in students:
             session.add(s)
