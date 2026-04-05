@@ -24,6 +24,14 @@ class Discipline(SQLModel, table=True):
     title: str
     short_info: Optional[str] = None
     doc_url: Optional[str] = None
+    
+    # New fields for extended info
+    commission_name: Optional[str] = None  # Назва циклової комісії
+    specialty_code: Optional[str] = None   # Шифр спеціальності
+    credits: Optional[float] = None        # Кількість кредитів
+    teacher_name: Optional[str] = None      # Прізвище, ініціали викладача
+    competence_type: Optional[str] = None   # Тип компетентностей (Загальні/Спеціальні)
+    
     active: bool = Field(default=True)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

@@ -27,7 +27,7 @@ export const useDataStore = defineStore('data', {
         },
         async fetchDisciplines() {
             const response = await api.get('/disciplines');
-            this.disciplines = response.data;
+            this.disciplines = this.sortList(response.data);
         },
         async fetchMyChoices() {
             const response = await api.get('/choices/my');
@@ -41,10 +41,18 @@ export const useDataStore = defineStore('data', {
         async fetchStats() {
             const response = await api.get('/admin/stats');
             this.stats = response.data;
+            if (this.stats?.discipline_stats) {
+                this.stats.discipline_stats = this.sortList(this.stats.discipline_stats);
+            }
         },
         async fetchAdminDisciplines() {
             const response = await api.get('/admin/disciplines');
-            this.adminDisciplines = response.data;
+            this.adminDisciplines = this.sortList(response.data);
+        },
+        sortList(list) {
+            if (!list) return [];
+            const collator = new Intl.Collator('uk', { numeric: true, sensitivity: 'base' });
+            return [...list].sort((a, b) => collator.compare(a.code || '', b.code || ''));
         },
         async createDiscipline(data) {
             await api.post('/admin/disciplines', data);
@@ -58,6 +66,15 @@ export const useDataStore = defineStore('data', {
             const response = await api.delete(`/admin/disciplines/${id}`);
             await this.fetchAdminDisciplines();
             return response.data; // Return results to UI
+        },
+        async importDisciplines(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await api.post('/admin/disciplines/import', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            await this.fetchAdminDisciplines();
+            return response.data;
         },
         async resetChoices() {
             const response = await api.post('/admin/choices/clear');

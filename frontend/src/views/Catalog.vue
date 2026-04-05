@@ -9,13 +9,40 @@
       <el-col v-for="discipline in dataStore.disciplines" :key="discipline.id" :xs="24" :sm="12" :lg="8">
         <el-card class="discipline-card" shadow="hover">
           <div class="card-content">
-            <div class="header-row">
-              <el-tag effect="dark" type="info" class="code-tag">{{ discipline.code }}</el-tag>
-              <h3 class="discipline-title">{{ discipline.title }}</h3>
+            <div class="card-header">
+              <h3 class="discipline-title">
+                <a v-if="discipline.doc_url" :href="discipline.doc_url" target="_blank" class="title-link">
+                  {{ discipline.title }}
+                  <el-icon class="link-icon" :size="14"><Link /></el-icon>
+                </a>
+                <span v-else>{{ discipline.title }}</span>
+              </h3>
+              <el-tag :type="discipline.active ? 'success' : 'info'" size="small" class="code-tag">
+                {{ discipline.code }}
+              </el-tag>
             </div>
             
             <div class="description-container">
               <p class="description">{{ discipline.short_info || 'Опис дисципліни відсутній.' }}</p>
+            </div>
+
+            <div class="discipline-meta">
+              <div class="meta-item popularity" v-if="discipline.choice_count > 0">
+                <el-icon><UserFilled /></el-icon>
+                <span>Обрали: <b>{{ discipline.choice_count }}</b> студентів</span>
+              </div>
+              <div class="meta-item" v-if="discipline.teacher_name">
+                <el-icon><User /></el-icon>
+                <span>{{ discipline.teacher_name }}</span>
+              </div>
+              <div class="meta-tags">
+                <el-tag size="small" type="warning" v-if="discipline.credits">
+                  {{ discipline.credits }} кред.
+                </el-tag>
+                <el-tag size="small" type="success" v-if="discipline.competence_type">
+                  {{ discipline.competence_type }}
+                </el-tag>
+              </div>
             </div>
 
             <div class="card-footer">
@@ -65,6 +92,7 @@
 import { onMounted, ref } from 'vue';
 import { useDataStore } from '../store/data';
 import { ElMessage } from 'element-plus';
+import { User, Link, UserFilled } from '@element-plus/icons-vue';
 
 const dataStore = useDataStore();
 const showConfirm = ref(false);
@@ -146,6 +174,13 @@ const submitChoices = async () => {
   border-color: #3b82f6;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
 .card-content {
   padding: 8px;
   display: flex;
@@ -154,32 +189,44 @@ const submitChoices = async () => {
   min-height: 220px;
 }
 
-.header-row {
+.discipline-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.title-link {
+  color: #1e293b;
+  text-decoration: none;
+  transition: all 0.2s;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-link:hover {
+  color: #409eff;
+  text-decoration: underline;
+}
+
+.link-icon {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.title-link:hover .link-icon {
+  opacity: 1;
 }
 
 .code-tag {
+  font-weight: 600;
   width: fit-content;
-  font-weight: 700;
   letter-spacing: 0.05em;
   padding: 0 12px;
   border-radius: 8px;
-}
-
-.discipline-title {
-  margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.4;
-  font-weight: 700;
-  color: #1e293b;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .description-container {
@@ -197,6 +244,36 @@ const submitChoices = async () => {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.discipline-meta {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.popularity {
+  color: #3b82f6;
+  background-color: #eff6ff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.meta-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .card-footer {
