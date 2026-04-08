@@ -1,5 +1,39 @@
 <template>
   <div class="admin-panel">
+    <!-- Admin Filters -->
+    <div class="admin-filters-container">
+      <div class="filter-row">
+        <el-input
+          v-model="searchQuery"
+          placeholder="Пошук за назвою, кодом або викладачем..."
+          class="admin-search"
+          clearable
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        
+
+
+        <el-select
+          v-model="selectedGroup"
+          placeholder="Вибір групи"
+          clearable
+          class="admin-group-select"
+        >
+          <el-option
+            v-for="group in dataStore.allGroups"
+            :key="group"
+            :label="group"
+            :value="group"
+          />
+        </el-select>
+        
+        <el-button v-if="searchQuery || selectedGroup" @click="resetFilters" link>Скинути</el-button>
+      </div>
+    </div>
+
     <el-tabs type="border-card">
       <el-tab-pane label="Статистика">
         <div class="card-header">
@@ -9,7 +43,7 @@
             <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
           </div>
         </div>
-        <el-table :data="dataStore.stats?.discipline_stats" border stripe v-if="dataStore.stats" :key="dataStore.stats?.discipline_stats?.length">
+        <el-table :data="filteredStats" border stripe v-if="dataStore.stats" :key="dataStore.stats?.discipline_stats?.length">
           <el-table-column type="expand">
             <template #default="props">
               <div class="group-stats-box">
@@ -51,7 +85,7 @@
           </div>
         </div>
         
-        <el-table :data="dataStore.adminDisciplines" border stripe>
+        <el-table :data="filteredAdminDisciplines" border stripe>
           <el-table-column prop="code" label="Код" width="100" />
           <el-table-column label="Назва">
             <template #default="{ row }">
@@ -152,16 +186,58 @@
 </template>
 
 <script setup>
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, ref, reactive, computed } from 'vue';
 import { useDataStore } from '../store/data';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Link } from '@element-plus/icons-vue';
+import { Link, Search } from '@element-plus/icons-vue';
 
 const dataStore = useDataStore();
 
 const dialogVisible = ref(false);
 const saving = ref(false);
 const fileInput = ref(null);
+
+const searchQuery = ref('');
+
+const selectedGroup = ref('');
+
+const filteredStats = computed(() => {
+  if (!dataStore.stats?.discipline_stats) return [];
+  return dataStore.stats.discipline_stats.filter(item => {
+    const s = searchQuery.value.toLowerCase();
+    const matchesSearch = !s || 
+      item.title.toLowerCase().includes(s) || 
+      item.code.toLowerCase().includes(s);
+    const matchesSpec = true;
+    
+    // Group filter logic: check if this group made ANY choices for this discipline
+    let matchesGroup = true;
+    if (selectedGroup.value) {
+      const gStat = item.group_stats?.find(g => g.group === selectedGroup.value);
+      matchesGroup = !!(gStat && gStat.count > 0);
+    }
+
+    return matchesSearch && matchesSpec && matchesGroup;
+  });
+});
+
+const filteredAdminDisciplines = computed(() => {
+  return dataStore.adminDisciplines.filter(item => {
+    const s = searchQuery.value.toLowerCase();
+    const matchesSearch = !s || 
+      item.title.toLowerCase().includes(s) || 
+      item.code.toLowerCase().includes(s) ||
+      (item.teacher_name && item.teacher_name.toLowerCase().includes(s));
+    const matchesSpec = true;
+    return matchesSearch && matchesSpec;
+  });
+});
+
+const resetFilters = () => {
+  searchQuery.value = '';
+
+  selectedGroup.value = '';
+};
 
 const triggerUpload = () => {
 fileInput.value.click();
@@ -316,7 +392,34 @@ const handleDelete = (id) => {
 
 <style scoped>
 .admin-panel {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.admin-filters-container {
+  margin-bottom: 1.5rem;
+  background: white;
   padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+}
+
+.filter-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.admin-search {
+  flex: 1;
+  max-width: 400px;
+}
+
+
+
+.admin-group-select {
+  width: 180px;
 }
 .card-header {
   display: flex;

@@ -42,6 +42,7 @@ def get_stats(
             "id": d.id,
             "code": d.code,
             "title": d.title,
+            "specialty_code": d.specialty_code,
             "priority1": count_p1,
             "priority2": count_p2,
             "priority3": count_p3,

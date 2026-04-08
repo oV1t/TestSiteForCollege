@@ -12,6 +12,24 @@ export const useDataStore = defineStore('data', {
     getters: {
         isSelected: (state) => (id) => state.selectedIds.includes(id),
         canAddMore: (state) => state.selectedIds.length < 3,
+        allSpecialties: (state) => {
+            const specs = state.disciplines
+                .map(d => d.specialty_code)
+                .filter(s => s && s.trim() !== "");
+            return [...new Set(specs)].sort();
+        },
+        allGroups: (state) => {
+            if (!state.stats?.discipline_stats) return [];
+            const groups = new Set();
+            state.stats.discipline_stats.forEach(disc => {
+                if (disc.group_stats) {
+                    disc.group_stats.forEach(g => {
+                        if (g.group) groups.add(g.group);
+                    });
+                }
+            });
+            return [...groups].sort();
+        }
     },
     actions: {
         toggleSelection(id) {

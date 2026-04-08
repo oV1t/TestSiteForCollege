@@ -5,8 +5,37 @@
       <p>Оберіть 2 або 3 пріоритетні дисципліни для вашого навчання</p>
     </div>
 
-    <el-row :gutter="24">
-      <el-col v-for="discipline in dataStore.disciplines" :key="discipline.id" :xs="24" :sm="12" :lg="8">
+    <!-- Filters Section -->
+    <div class="catalog-filters">
+      <div class="filter-group-primary">
+        <el-input
+          v-model="searchQuery"
+          placeholder="Пошук за назвою або викладачем..."
+          class="search-input"
+          clearable
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+      </div>
+
+      <div class="filter-group-secondary">
+
+        
+        <el-button 
+          v-if="searchQuery" 
+          @click="resetFilters" 
+          link 
+          class="reset-link"
+        >
+          Скинути
+        </el-button>
+      </div>
+    </div>
+
+    <el-row :gutter="24" v-if="filteredDisciplines.length > 0">
+      <el-col v-for="discipline in filteredDisciplines" :key="discipline.id" :xs="24" :sm="12" :lg="8">
         <el-card class="discipline-card" shadow="hover">
           <div class="card-content">
             <div class="card-header">
@@ -64,6 +93,15 @@
       </el-col>
     </el-row>
 
+    <!-- Empty State -->
+    <el-empty 
+      v-else 
+      description="Нічого не знайдено за вашим запитом" 
+      class="empty-state"
+    >
+      <el-button type="primary" @click="resetFilters">Скинути всі фільтри</el-button>
+    </el-empty>
+
     <div class="selection-fab" v-if="dataStore.selectedIds.length > 0">
       <el-button type="primary" size="large" class="submit-fab" @click="showConfirm = true">
         Підтвердити вибір ({{ dataStore.selectedIds.length }})
@@ -89,14 +127,34 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useDataStore } from '../store/data';
 import { ElMessage } from 'element-plus';
-import { User, Link, UserFilled } from '@element-plus/icons-vue';
+import { User, Link, UserFilled, Search } from '@element-plus/icons-vue';
 
 const dataStore = useDataStore();
 const showConfirm = ref(false);
 const submitting = ref(false);
+
+const searchQuery = ref('');
+
+
+const filteredDisciplines = computed(() => {
+  return dataStore.disciplines.filter(d => {
+    const matchesSearch = !searchQuery.value || 
+      d.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      (d.teacher_name && d.teacher_name.toLowerCase().includes(searchQuery.value.toLowerCase()));
+    
+    const matchesSpec = true;
+    
+    return matchesSearch && matchesSpec;
+  });
+});
+
+const resetFilters = () => {
+  searchQuery.value = '';
+
+};
 
 onMounted(() => {
   dataStore.fetchDisciplines();
@@ -157,6 +215,55 @@ const submitChoices = async () => {
 .catalog-header p {
   color: #64748b;
   font-size: 1.1rem;
+}
+
+.catalog-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto 2.5rem;
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 768px) {
+  .catalog-filters {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.filter-group-primary {
+  flex: 1;
+}
+
+.filter-group-secondary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-input :deep(.el-input__wrapper) {
+  border-radius: 10px;
+  padding: 8px 16px;
+  box-shadow: 0 0 0 1px #e2e8f0 inset;
+}
+
+
+
+.reset-link {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.empty-state {
+  margin-top: 4rem;
+  background: white;
+  padding: 60px;
+  border-radius: 24px;
 }
 
 .discipline-card {
