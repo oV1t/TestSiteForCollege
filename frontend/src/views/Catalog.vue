@@ -21,10 +21,36 @@
       </div>
 
       <div class="filter-group-secondary">
+        <el-select 
+          v-model="selectedCommission" 
+          placeholder="Циклова комісія" 
+          clearable 
+          class="filter-select"
+        >
+          <el-option
+            v-for="item in dataStore.allCommissions"
+            :key="item"
+            :label="item"
+            :value="item"
+          />
+        </el-select>
 
+        <el-select 
+          v-model="selectedSpecialty" 
+          placeholder="Спеціальність" 
+          clearable 
+          class="filter-select"
+        >
+          <el-option
+            v-for="item in dataStore.allSpecialties"
+            :key="item"
+            :label="item"
+            :value="item"
+          />
+        </el-select>
         
         <el-button 
-          v-if="searchQuery" 
+          v-if="searchQuery || selectedCommission || selectedSpecialty" 
           @click="resetFilters" 
           link 
           class="reset-link"
@@ -56,6 +82,10 @@
             </div>
 
             <div class="discipline-meta">
+              <div class="meta-item commission" v-if="discipline.commission_name">
+                <el-icon><School /></el-icon>
+                <span>{{ discipline.commission_name }}</span>
+              </div>
               <div class="meta-item popularity" v-if="discipline.choice_count > 0">
                 <el-icon><UserFilled /></el-icon>
                 <span>Обрали: <b>{{ discipline.choice_count }}</b> студентів</span>
@@ -70,6 +100,9 @@
                 </el-tag>
                 <el-tag size="small" type="success" v-if="discipline.competence_type">
                   {{ discipline.competence_type }}
+                </el-tag>
+                <el-tag size="small" type="info" v-if="discipline.specialty_code">
+                  Спец: {{ discipline.specialty_code }}
                 </el-tag>
               </div>
             </div>
@@ -130,13 +163,15 @@
 import { onMounted, ref, computed } from 'vue';
 import { useDataStore } from '../store/data';
 import { ElMessage } from 'element-plus';
-import { User, Link, UserFilled, Search } from '@element-plus/icons-vue';
+import { User, Link, UserFilled, Search, School } from '@element-plus/icons-vue';
 
 const dataStore = useDataStore();
 const showConfirm = ref(false);
 const submitting = ref(false);
 
 const searchQuery = ref('');
+const selectedCommission = ref('');
+const selectedSpecialty = ref('');
 
 
 const filteredDisciplines = computed(() => {
@@ -145,15 +180,17 @@ const filteredDisciplines = computed(() => {
       d.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       (d.teacher_name && d.teacher_name.toLowerCase().includes(searchQuery.value.toLowerCase()));
     
-    const matchesSpec = true;
+    const matchesCommission = !selectedCommission.value || d.commission_name === selectedCommission.value;
+    const matchesSpec = !selectedSpecialty.value || d.specialty_code === selectedSpecialty.value;
     
-    return matchesSearch && matchesSpec;
+    return matchesSearch && matchesCommission && matchesSpec;
   });
 });
 
 const resetFilters = () => {
   searchQuery.value = '';
-
+  selectedCommission.value = '';
+  selectedSpecialty.value = '';
 };
 
 onMounted(() => {
@@ -244,12 +281,25 @@ const submitChoices = async () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  width: 200px;
+}
+
+.filter-select :deep(.el-input__wrapper) {
+  border-radius: 10px;
+  padding: 8px 16px;
+  box-shadow: 0 0 0 1px #e2e8f0 inset;
+  height: 48px;
 }
 
 .search-input :deep(.el-input__wrapper) {
   border-radius: 10px;
   padding: 8px 16px;
   box-shadow: 0 0 0 1px #e2e8f0 inset;
+  height: 48px;
 }
 
 

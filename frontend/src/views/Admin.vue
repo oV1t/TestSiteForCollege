@@ -17,10 +17,38 @@
 
 
         <el-select
+          v-model="selectedCommission"
+          placeholder="Циклова комісія"
+          clearable
+          class="admin-filter-select"
+        >
+          <el-option
+            v-for="item in dataStore.allCommissions"
+            :key="item"
+            :label="item"
+            :value="item"
+          />
+        </el-select>
+
+        <el-select
+          v-model="selectedSpecialty"
+          placeholder="Спеціальність"
+          clearable
+          class="admin-filter-select"
+        >
+          <el-option
+            v-for="item in dataStore.allSpecialties"
+            :key="item"
+            :label="item"
+            :value="item"
+          />
+        </el-select>
+
+        <el-select
           v-model="selectedGroup"
           placeholder="Вибір групи"
           clearable
-          class="admin-group-select"
+          class="admin-filter-select"
         >
           <el-option
             v-for="group in dataStore.allGroups"
@@ -30,7 +58,7 @@
           />
         </el-select>
         
-        <el-button v-if="searchQuery || selectedGroup" @click="resetFilters" link>Скинути</el-button>
+        <el-button v-if="searchQuery || selectedGroup || selectedCommission || selectedSpecialty" @click="resetFilters" link>Скинути</el-button>
       </div>
     </div>
 
@@ -189,7 +217,7 @@
 import { onMounted, ref, reactive, computed } from 'vue';
 import { useDataStore } from '../store/data';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Link, Search } from '@element-plus/icons-vue';
+import { Link, Search, School } from '@element-plus/icons-vue';
 
 const dataStore = useDataStore();
 
@@ -200,6 +228,8 @@ const fileInput = ref(null);
 const searchQuery = ref('');
 
 const selectedGroup = ref('');
+const selectedCommission = ref('');
+const selectedSpecialty = ref('');
 
 const filteredStats = computed(() => {
   if (!dataStore.stats?.discipline_stats) return [];
@@ -208,7 +238,9 @@ const filteredStats = computed(() => {
     const matchesSearch = !s || 
       item.title.toLowerCase().includes(s) || 
       item.code.toLowerCase().includes(s);
-    const matchesSpec = true;
+    
+    const matchesCommission = !selectedCommission.value || item.commission_name === selectedCommission.value;
+    const matchesSpec = !selectedSpecialty.value || item.specialty_code === selectedSpecialty.value;
     
     // Group filter logic: check if this group made ANY choices for this discipline
     let matchesGroup = true;
@@ -217,7 +249,7 @@ const filteredStats = computed(() => {
       matchesGroup = !!(gStat && gStat.count > 0);
     }
 
-    return matchesSearch && matchesSpec && matchesGroup;
+    return matchesSearch && matchesCommission && matchesSpec && matchesGroup;
   });
 });
 
@@ -228,15 +260,19 @@ const filteredAdminDisciplines = computed(() => {
       item.title.toLowerCase().includes(s) || 
       item.code.toLowerCase().includes(s) ||
       (item.teacher_name && item.teacher_name.toLowerCase().includes(s));
-    const matchesSpec = true;
-    return matchesSearch && matchesSpec;
+    
+    const matchesCommission = !selectedCommission.value || item.commission_name === selectedCommission.value;
+    const matchesSpec = !selectedSpecialty.value || item.specialty_code === selectedSpecialty.value;
+    
+    return matchesSearch && matchesCommission && matchesSpec;
   });
 });
 
 const resetFilters = () => {
   searchQuery.value = '';
-
   selectedGroup.value = '';
+  selectedCommission.value = '';
+  selectedSpecialty.value = '';
 };
 
 const triggerUpload = () => {
@@ -418,7 +454,7 @@ const handleDelete = (id) => {
 
 
 
-.admin-group-select {
+.admin-filter-select {
   width: 180px;
 }
 .card-header {

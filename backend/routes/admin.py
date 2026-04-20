@@ -42,6 +42,7 @@ def get_stats(
             "id": d.id,
             "code": d.code,
             "title": d.title,
+            "commission_name": d.commission_name,
             "specialty_code": d.specialty_code,
             "priority1": count_p1,
             "priority2": count_p2,
@@ -249,20 +250,20 @@ async def import_disciplines(
 
         # Detect columns from final headers
         final_cols = list(df.columns)
-        code_col = get_col_name(final_cols, ["Код", "ВК"]) or get_col_name(final_cols, ["Code"])
-        title_col = get_col_name(final_cols, ["Назва", "дисциплін"]) or get_col_name(final_cols, ["Title"])
+        code_col = get_col_name(final_cols, ["Код", "ВК"]) or get_col_name(final_cols, ["Код"]) or get_col_name(final_cols, ["Code"])
+        title_col = get_col_name(final_cols, ["Назва", "дисциплін"]) or get_col_name(final_cols, ["Назва"]) or get_col_name(final_cols, ["Title"])
         credits_col = get_col_name(final_cols, ["кредит"]) or get_col_name(final_cols, ["Credits"])
         teacher_col = get_col_name(final_cols, ["викладач"]) or get_col_name(final_cols, ["Teacher"])
         comp_col = get_col_name(final_cols, ["компетентност"]) or get_col_name(final_cols, ["Competence"])
-        comm_col = get_col_name(final_cols, ["коміс"]) or get_col_name(final_cols, ["Commission"])
-        spec_col = get_col_name(final_cols, ["коду", "спеціальн"]) or get_col_name(final_cols, ["Specialty"])
+        comm_col = get_col_name(final_cols, ["коміс"]) or get_col_name(final_cols, ["ЦК"]) or get_col_name(final_cols, ["Commission"])
+        spec_col = get_col_name(final_cols, ["спеціальн"]) or get_col_name(final_cols, ["шифр"]) or get_col_name(final_cols, ["Specialty"])
         
         # URL column search: any of these keywords (aggressive search)
         url_col = None
         url_col_idx = -1
         for idx, col in enumerate(final_cols):
             c = str(col).lower()
-            if any(k in c for k in ["диск", "disk", "google", "посилання", "силабус", "папк", "матеріал", "докум"]):
+            if any(k in c for k in ["диск", "disk", "google", "посилання", "силабус", "папк", "матеріал", "докум", "url"]):
                 url_col = col
                 url_col_idx = idx
                 break
@@ -277,8 +278,19 @@ async def import_disciplines(
             return s
 
         stats = {"created": 0, "updated": 0}
+        last_comm = None
+        last_spec = None
         
         for index, row in df.iterrows():
+            # Update sticky categories if new values are found in this row
+            raw_comm = row.get(comm_col)
+            if comm_col and not pd.isna(raw_comm) and str(raw_comm).strip():
+                last_comm = str(raw_comm).strip()
+                
+            raw_spec = row.get(spec_col)
+            if spec_col and not pd.isna(raw_spec) and str(raw_spec).strip():
+                last_spec = str(raw_spec).strip()
+
             raw_code = row.get(code_col)
             if pd.isna(raw_code) or pd.isna(row.get(title_col)):
                 continue
@@ -301,7 +313,8 @@ async def import_disciplines(
                     # row index starts from 0 in iterrows, so it's data row.
                     # Excel row = header_index + 1 (for header) + index + 1
                     excel_row = header_index + 2 + index 
-                    cell = ws.cell(row=excel_row, column=url_col_idx + 1)
+                    ws_row = list(ws.rows)[excel_row - 1]
+                    cell = ws_row[url_col_idx]
                     if cell.hyperlink:
                         extracted_url = cell.hyperlink.target
                 except:
@@ -313,8 +326,8 @@ async def import_disciplines(
                 "title": str(row[title_col]).strip(),
                 "short_info": str(row.get('short_info', '')) if not pd.isna(row.get('short_info')) else None,
                 "doc_url": doc_url,
-                "commission_name": str(row[comm_col]).strip() if comm_col and not pd.isna(row.get(comm_col)) else None,
-                "spec": str(row[spec_col]).strip() if spec_col and not pd.isna(row.get(spec_col)) else None,
+                "commission_name": last_comm,
+                "spec": last_spec,
                 "credits": float(row[credits_col]) if credits_col and not pd.isna(row.get(credits_col)) else None,
                 "teacher": str(row[teacher_col]).strip() if teacher_col and not pd.isna(row.get(teacher_col)) else None,
                 "ctype": str(row[comp_col]).strip() if comp_col and not pd.isna(row.get(comp_col)) else None,

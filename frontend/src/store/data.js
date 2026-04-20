@@ -18,6 +18,12 @@ export const useDataStore = defineStore('data', {
                 .filter(s => s && s.trim() !== "");
             return [...new Set(specs)].sort();
         },
+        allCommissions: (state) => {
+            const commissions = state.disciplines
+                .map(d => d.commission_name)
+                .filter(c => c && c.trim() !== "");
+            return [...new Set(commissions)].sort();
+        },
         allGroups: (state) => {
             if (!state.stats?.discipline_stats) return [];
             const groups = new Set();
