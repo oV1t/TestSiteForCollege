@@ -154,6 +154,10 @@ async def google_verify(
         if len(parts) > 1:
             final_group = parts[-1] 
 
+    # Transformation: ІПЗ-1(2) -> ІПЗ-1/2
+    if final_group:
+        final_group = final_group.replace('(', '/').replace(')', '')
+
     # Check if user exists
     user = session.exec(select(User).where(User.email == email)).first()
     

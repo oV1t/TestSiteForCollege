@@ -68,7 +68,18 @@
           <h2>Аналітика вибору</h2>
           <div class="actions">
             <el-button type="danger" plain @click="handleReset">Очистити всі вибори</el-button>
-            <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
+            <div class="export-controls">
+              <el-input-number 
+                v-model="exportYear" 
+                :min="2020" 
+                :max="2035" 
+                size="default" 
+                controls-position="right" 
+                class="year-picker"
+              />
+              <el-button type="primary" @click="handleExportXlsx">Експорт Excel</el-button>
+              <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
+            </div>
           </div>
         </div>
         <el-table :data="filteredStats" border stripe v-if="dataStore.stats" :key="dataStore.stats?.discipline_stats?.length">
@@ -76,9 +87,19 @@
             <template #default="props">
               <div class="group-stats-box">
                 <h4>Розподіл по групах:</h4>
-                <el-table :data="props.row.group_stats" size="small" border style="width: 100%; max-width: 400px;">
+                <el-table :data="props.row.group_stats" size="small" border style="width: 100%; max-width: 600px;">
+                  <el-table-column type="expand">
+                    <template #default="groupProps">
+                      <div class="student-list">
+                        <div v-for="st in groupProps.row.students" :key="st.full_name" class="student-item">
+                          <span class="student-name">{{ st.full_name }}</span>
+                          <el-tag size="small" effect="plain" type="info">{{ st.year }} р.</el-tag>
+                        </div>
+                      </div>
+                    </template>
+                  </el-table-column>
                   <el-table-column prop="group" label="Група" />
-                  <el-table-column prop="count" label="Кількість студентів" align="center" />
+                  <el-table-column prop="count" label="Студентів" align="center" width="120" />
                 </el-table>
               </div>
             </template>
@@ -230,6 +251,7 @@ const searchQuery = ref('');
 const selectedGroup = ref('');
 const selectedCommission = ref('');
 const selectedSpecialty = ref('');
+const exportYear = ref(new Date().getFullYear());
 
 const filteredStats = computed(() => {
   if (!dataStore.stats?.discipline_stats) return [];
@@ -317,9 +339,18 @@ onMounted(() => {
 const exportCsv = async () => {
   try {
     await dataStore.exportCsv();
-    ElMessage.success('Експорт розпочато');
+    ElMessage.success('Експорт CSV розпочато');
   } catch (error) {
-    ElMessage.error('Помилка при експорті');
+    ElMessage.error('Помилка при експорті CSV');
+  }
+};
+
+const handleExportXlsx = async () => {
+  try {
+    await dataStore.exportXlsx(exportYear.value);
+    ElMessage.success(`Експорт Excel за ${exportYear.value} рік розпочато`);
+  } catch (error) {
+    ElMessage.error('Помилка при експорті Excel');
   }
 };
 
@@ -433,6 +464,12 @@ const handleDelete = (id) => {
   margin: 0 auto;
 }
 
+.actions {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
 .admin-filters-container {
   margin-bottom: 1.5rem;
   background: white;
@@ -496,5 +533,38 @@ const handleDelete = (id) => {
 
 .link-icon {
   font-size: 14px;
+}
+
+.student-list {
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: #ffffff;
+}
+
+.student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #334155;
+}
+
+.export-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.year-picker {
+  width: 100px;
 }
 </style>

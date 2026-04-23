@@ -6,6 +6,7 @@ from typing import List
 import io
 import csv
 from datetime import datetime
+import pandas as pd
 from models import Choice, ChoiceSet, User, Discipline, UserRole, Campaign
 from database import get_session
 from routes.auth import require_admin
@@ -28,16 +29,29 @@ def get_stats(
         count_p2 = session.exec(select(func.count(Choice.id)).where(Choice.discipline_id == d.id, Choice.priority == 2)).one()
         count_p3 = session.exec(select(func.count(Choice.id)).where(Choice.discipline_id == d.id, Choice.priority == 3)).one()
         
-        # New: Group breakdown (Total for all priorities)
-        group_counts = session.exec(
-            select(User.group_name, func.count(Choice.id))
+        # New: Group breakdown (Total for all priorities) with student names
+        choices_data = session.exec(
+            select(User.full_name, User.group_name, ChoiceSet.submitted_at)
             .join(ChoiceSet, ChoiceSet.user_id == User.id)
             .join(Choice, Choice.choice_set_id == ChoiceSet.id)
             .where(Choice.discipline_id == d.id)
-            .group_by(User.group_name)
+            .order_by(User.group_name, User.full_name)
         ).all()
         
-        group_stats = [{"group": g, "count": c} for g, c in group_counts if g]
+        group_map = {}
+        for name, group, submitted_at in choices_data:
+            if not group: continue
+            if group not in group_map:
+                group_map[group] = []
+            group_map[group].append({
+                "full_name": name,
+                "year": submitted_at.year if submitted_at else datetime.now().year
+            })
+        
+        group_stats = [
+            {"group": g, "count": len(s), "students": s} 
+            for g, s in group_map.items()
+        ]
         stats.append({
             "id": d.id,
             "code": d.code,
@@ -83,6 +97,47 @@ def export_choices_csv(
         iter([output.getvalue()]),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=elective_choices.csv"}
+    )
+
+@router.get("/export/xlsx")
+def export_choices_xlsx(
+    year: int,
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin)
+):
+    # Filter by year from submitted_at
+    choicesets = session.exec(
+        select(ChoiceSet)
+        .where(func.extract('year', ChoiceSet.submitted_at) == year)
+    ).all()
+    
+    data = []
+    for cs in choicesets:
+        p1 = next((c.discipline.title for c in cs.choices if c.priority == 1), "")
+        p2 = next((c.discipline.title for c in cs.choices if c.priority == 2), "")
+        p3 = next((c.discipline.title for c in cs.choices if c.priority == 3), "")
+        data.append({
+            "Email": cs.user.email,
+            "Full Name": cs.user.full_name,
+            "Group": cs.user.group_name,
+            "Priority 1": p1,
+            "Priority 2": p2,
+            "Priority 3": p3,
+            "Submitted At": cs.submitted_at.replace(tzinfo=None) if cs.submitted_at else None
+        })
+    
+    df = pd.DataFrame(data)
+    
+    # Generate Excel in memory
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name=f'Choices {year}')
+    
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=elective_choices_{year}.xlsx"}
     )
 
 from pydantic import BaseModel
@@ -186,7 +241,6 @@ def clear_all_choices(
         raise HTTPException(status_code=500, detail=str(e))
 
 from fastapi import UploadFile, File
-import pandas as pd
 import io
 
 @router.post("/disciplines/import")

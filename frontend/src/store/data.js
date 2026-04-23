@@ -13,13 +13,15 @@ export const useDataStore = defineStore('data', {
         isSelected: (state) => (id) => state.selectedIds.includes(id),
         canAddMore: (state) => state.selectedIds.length < 3,
         allSpecialties: (state) => {
-            const specs = state.disciplines
+            const combined = [...state.disciplines, ...state.adminDisciplines];
+            const specs = combined
                 .map(d => d.specialty_code)
                 .filter(s => s && s.trim() !== "");
             return [...new Set(specs)].sort();
         },
         allCommissions: (state) => {
-            const commissions = state.disciplines
+            const combined = [...state.disciplines, ...state.adminDisciplines];
+            const commissions = combined
                 .map(d => d.commission_name)
                 .filter(c => c && c.trim() !== "");
             return [...new Set(commissions)].sort();
@@ -113,6 +115,17 @@ export const useDataStore = defineStore('data', {
             link.setAttribute('download', 'elective_choices.csv');
             document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+        },
+        async exportXlsx(year) {
+            const response = await api.get(`/admin/export/xlsx?year=${year}`, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `elective_choices_${year}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     },
 });
