@@ -18,9 +18,20 @@ def submit_choices(
     campaign = session.exec(select(Campaign).where(Campaign.active == True)).first()
     if not campaign:
         raise HTTPException(status_code=400, detail="No active campaign")
-    
-    if not (campaign.start_date <= datetime.now(timezone.utc) <= campaign.end_date):
-        raise HTTPException(status_code=400, detail="Campaign is not currently open")
+
+    # Ensure all datetimes are compared as naive UTC to avoid timezone issues
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    start_date = campaign.start_date.replace(tzinfo=None)
+    end_date = campaign.end_date.replace(tzinfo=None)
+
+    # Date range check removed as per user request
+    # if not (start_date <= now <= end_date):
+    #     raise HTTPException(
+    #         status_code=400, 
+    #         detail=f"Період вибору не активний. Поточний час: {now.strftime('%Y-%m-%d %H:%M')}, "
+    #                f"Початок: {start_date.strftime('%Y-%m-%d %H:%M')}, "
+    #                f"Кінець: {end_date.strftime('%Y-%m-%d %H:%M')}"
+    #     )
 
     if len(discipline_ids) < campaign.min_choices or len(discipline_ids) > campaign.max_choices:
         raise HTTPException(status_code=400, detail=f"Selection must be between {campaign.min_choices} and {campaign.max_choices} items")
