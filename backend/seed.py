@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select, SQLModel
 from models import Campaign, Discipline, User, UserRole
 from database import engine, create_db_and_tables
@@ -25,7 +25,7 @@ def seed_data():
         session.add(admin)
 
         # Create Campaign
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         campaign = Campaign(
             name="Вибір дисциплін: Весна 2026",
             start_date=now - timedelta(days=1),

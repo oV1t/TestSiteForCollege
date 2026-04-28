@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import List
 from sqlmodel import Session, select
 from models import Discipline, SyncState
@@ -35,7 +35,7 @@ def sync_disciplines_from_sheet(sheet_url: str):
                     discipline.short_info = row.get('short_info')
                     discipline.doc_url = row.get('doc_url')
                     discipline.active = bool(row.get('active', True))
-                    discipline.updated_at = datetime.utcnow()
+                    discipline.updated_at = datetime.now(timezone.utc)
                     session.add(discipline)
                 else:
                     new_discipline = Discipline(

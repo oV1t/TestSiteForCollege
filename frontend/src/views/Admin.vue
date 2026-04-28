@@ -82,43 +82,68 @@
             </div>
           </div>
         </div>
-        <el-table :data="filteredStats" border stripe v-if="dataStore.stats" :key="dataStore.stats?.discipline_stats?.length">
-          <el-table-column type="expand">
-            <template #default="props">
-              <div class="group-stats-box">
-                <h4>Розподіл по групах:</h4>
-                <el-table :data="props.row.group_stats" size="small" border style="width: 100%; max-width: 600px;">
-                  <el-table-column type="expand">
-                    <template #default="groupProps">
-                      <div class="student-list">
-                        <div v-for="st in groupProps.row.students" :key="st.full_name" class="student-item">
-                          <span class="student-name">{{ st.full_name }}</span>
-                          <el-tag size="small" effect="plain" type="info">{{ st.year }} р.</el-tag>
+        <div class="desktop-view">
+          <el-table :data="filteredStats" border stripe v-if="dataStore.stats" :key="dataStore.stats?.discipline_stats?.length">
+            <el-table-column type="expand">
+              <template #default="props">
+                <div class="group-stats-box">
+                  <h4>Розподіл по групах:</h4>
+                  <el-table :data="props.row.group_stats" size="small" border style="width: 100%; max-width: 600px;">
+                    <el-table-column type="expand">
+                      <template #default="groupProps">
+                        <div class="student-list">
+                          <div v-for="st in groupProps.row.students" :key="st.full_name" class="student-item">
+                            <span class="student-name">{{ st.full_name }}</span>
+                            <el-tag size="small" effect="plain" type="info">{{ st.year }} р.</el-tag>
+                          </div>
                         </div>
-                      </div>
-                    </template>
-                  </el-table-column>
-                  <el-table-column prop="group" label="Група" />
-                  <el-table-column prop="count" label="Студентів" align="center" width="120" />
-                </el-table>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="code" label="Код" width="100" />
-          <el-table-column label="Назва">
-            <template #default="{ row }">
-              <a v-if="row.doc_url" :href="row.doc_url" target="_blank" class="admin-title-link">
-                {{ row.title }}
-                <el-icon class="link-icon"><Link /></el-icon>
-              </a>
-              <span v-else>{{ row.title }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="priority1" label="Пріор. 1" width="100" align="center" />
-          <el-table-column prop="priority2" label="Пріор. 2" width="100" align="center" />
-          <el-table-column prop="priority3" label="Пріор. 3" width="100" align="center" />
-          <el-table-column prop="total" label="Всього" width="80" align="center" />
-        </el-table>
+                      </template>
+                    </el-table-column>
+                    <el-table-column prop="group" label="Група" />
+                    <el-table-column prop="count" label="Студентів" align="center" width="120" />
+                  </el-table>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="code" label="Код" width="100" />
+            <el-table-column label="Назва">
+              <template #default="{ row }">
+                <a v-if="row.doc_url" :href="row.doc_url" target="_blank" class="admin-title-link">
+                  {{ row.title }}
+                  <el-icon class="link-icon"><Link /></el-icon>
+                </a>
+                <span v-else>{{ row.title }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="priority1" label="Пріор. 1" width="100" align="center" />
+            <el-table-column prop="priority2" label="Пріор. 2" width="100" align="center" />
+            <el-table-column prop="priority3" label="Пріор. 3" width="100" align="center" />
+            <el-table-column prop="total" label="Всього" width="80" align="center" />
+          </el-table>
+        </div>
+
+        <div class="mobile-view stats-mobile">
+          <div v-for="row in filteredStats" :key="row.code" class="mobile-stat-card">
+            <div class="stat-header">
+              <el-tag size="small" type="info">{{ row.code }}</el-tag>
+              <span class="total-badge">Всього: {{ row.total }}</span>
+            </div>
+            <h4>{{ row.title }}</h4>
+            <div class="stat-grid">
+              <div class="grid-item"><span>П1</span><strong>{{ row.priority1 }}</strong></div>
+              <div class="grid-item"><span>П2</span><strong>{{ row.priority2 }}</strong></div>
+              <div class="grid-item"><span>П3</span><strong>{{ row.priority3 }}</strong></div>
+            </div>
+            <el-collapse v-if="row.group_stats && row.group_stats.length > 0">
+              <el-collapse-item title="Розподіл по групах">
+                <div v-for="g in row.group_stats" :key="g.group" class="mobile-group-row">
+                  <span>{{ g.group }}</span>
+                  <strong>{{ g.count }}</strong>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+          </div>
+        </div>
         <div class="summary" v-if="dataStore.stats">
           Всього студентів що зробили вибір: <strong>{{ dataStore.stats.total_participants }}</strong>
         </div>
@@ -134,31 +159,48 @@
           </div>
         </div>
         
-        <el-table :data="filteredAdminDisciplines" border stripe>
-          <el-table-column prop="code" label="Код" width="100" />
-          <el-table-column label="Назва">
-            <template #default="{ row }">
-              <a v-if="row.doc_url" :href="row.doc_url" target="_blank" class="admin-title-link">
-                {{ row.title }}
-                <el-icon class="link-icon"><Link /></el-icon>
-              </a>
-              <span v-else>{{ row.title }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="teacher_name" label="Викладач" width="150" />
-          <el-table-column prop="credits" label="Кред." width="70" align="center" />
-          <el-table-column prop="active" label="Статус" width="100">
-            <template #default="{ row }">
-              <el-tag :type="row.active ? 'success' : 'danger'">{{ row.active ? 'Активна' : 'Неактивна' }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="Дії" width="180" align="center">
-            <template #default="{ row }">
-              <el-button size="small" @click="openDialog(row)">Ред.</el-button>
+        <div class="desktop-view">
+          <el-table :data="filteredAdminDisciplines" border stripe>
+            <el-table-column prop="code" label="Код" width="100" />
+            <el-table-column label="Назва">
+              <template #default="{ row }">
+                <a v-if="row.doc_url" :href="row.doc_url" target="_blank" class="admin-title-link">
+                  {{ row.title }}
+                  <el-icon class="link-icon"><Link /></el-icon>
+                </a>
+                <span v-else>{{ row.title }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="teacher_name" label="Викладач" width="150" />
+            <el-table-column prop="credits" label="Кред." width="70" align="center" />
+            <el-table-column prop="active" label="Статус" width="100">
+              <template #default="{ row }">
+                <el-tag :type="row.active ? 'success' : 'danger'">{{ row.active ? 'Активна' : 'Неактивна' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="Дії" width="180" align="center">
+              <template #default="{ row }">
+                <el-button size="small" @click="openDialog(row)">Ред.</el-button>
+                <el-button size="small" type="danger" @click="handleDelete(row.id)">Видалити</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <div class="mobile-view admin-mobile">
+          <div v-for="row in filteredAdminDisciplines" :key="row.id" class="mobile-admin-card">
+            <div class="card-top">
+              <el-tag size="small">{{ row.code }}</el-tag>
+              <el-tag :type="row.active ? 'success' : 'danger'" size="small">{{ row.active ? 'Активна' : 'Неактивна' }}</el-tag>
+            </div>
+            <h4>{{ row.title }}</h4>
+            <p class="teacher">Викладач: {{ row.teacher_name }}</p>
+            <div class="card-actions">
+              <el-button size="small" @click="openDialog(row)">Редагувати</el-button>
               <el-button size="small" type="danger" @click="handleDelete(row.id)">Видалити</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+            </div>
+          </div>
+        </div>
       </el-tab-pane>
     </el-tabs>
 
@@ -482,6 +524,7 @@ const handleDelete = (id) => {
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .admin-search {
@@ -499,6 +542,8 @@ const handleDelete = (id) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 .mb-10 {
   margin-bottom: 10px;
@@ -566,5 +611,104 @@ const handleDelete = (id) => {
 
 .year-picker {
   width: 100px;
+}
+
+.mobile-view {
+  display: none;
+}
+
+.mobile-stat-card, .mobile-admin-card {
+  background: white;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.stat-header, .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.total-badge {
+  font-weight: 700;
+  color: #409eff;
+}
+
+.mobile-stat-card h4, .mobile-admin-card h4 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+  background: #f8fafc;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.grid-item span { color: #94a3b8; margin-bottom: 4px; }
+.grid-item strong { color: #1e293b; font-size: 1rem; }
+
+.mobile-group-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.teacher {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .admin-panel {
+    padding: 0.5rem;
+  }
+  .desktop-view {
+    display: none;
+  }
+  .mobile-view {
+    display: block;
+  }
+  .admin-search {
+    max-width: none;
+    width: 100%;
+  }
+  .admin-filter-select {
+    width: 100%;
+  }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .export-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .year-picker {
+    width: 100% !important;
+  }
 }
 </style>

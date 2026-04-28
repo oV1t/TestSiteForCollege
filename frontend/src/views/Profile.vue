@@ -3,21 +3,21 @@
     <el-card class="profile-card">
       <template #header>
         <div class="card-header">
-          <span>My Profile</span>
+          <span>Мій профіль</span>
         </div>
       </template>
       <el-form :model="form" :rules="rules" ref="profileForm" label-width="120px" @submit.prevent="submitForm">
         <el-form-item label="Email">
           <el-input v-model="auth.user.email" disabled></el-input>
         </el-form-item>
-        <el-form-item label="Full Name" prop="full_name">
+        <el-form-item label="ПІБ" prop="full_name">
           <el-input v-model="form.full_name"></el-input>
         </el-form-item>
-        <el-form-item label="Group Name" prop="group_name" v-if="!auth.isAdmin">
+        <el-form-item label="Група" prop="group_name" v-if="!auth.isAdmin">
           <el-input v-model="form.group_name"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" native-type="submit" :loading="loading">Save</el-button>
+          <el-button type="primary" native-type="submit" :loading="loading">Зберегти</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -40,7 +40,7 @@ const form = reactive({
 
 const rules = {
   full_name: [
-    { required: true, message: 'Please input full name', trigger: 'blur' }
+    { required: true, message: 'Будь ласка, введіть ПІБ', trigger: 'blur' }
   ]
 };
 
@@ -66,9 +66,9 @@ const submitForm = async () => {
       loading.value = true;
       try {
         await auth.updateProfile(form);
-        ElMessage.success('Profile updated successfully');
+        ElMessage.success('Профіль успішно оновлено');
       } catch (error) {
-        ElMessage.error('Failed to update profile');
+        ElMessage.error('Не вдалося оновити профіль');
       } finally {
         loading.value = false;
       }
@@ -79,8 +79,9 @@ const submitForm = async () => {
 
 <style scoped>
 .profile-container {
+  width: 95%;
   max-width: 600px;
-  margin: 2rem auto;
+  margin: 1rem auto;
 }
 .card-header {
   font-weight: bold;

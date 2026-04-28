@@ -4,7 +4,7 @@ from typing import List
 from models import Choice, ChoiceSet, User, Campaign
 from database import get_session
 from routes.auth import get_current_user
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ def submit_choices(
     if not campaign:
         raise HTTPException(status_code=400, detail="No active campaign")
     
-    if not (campaign.start_date <= datetime.utcnow() <= campaign.end_date):
+    if not (campaign.start_date <= datetime.now(timezone.utc) <= campaign.end_date):
         raise HTTPException(status_code=400, detail="Campaign is not currently open")
 
     if len(discipline_ids) < campaign.min_choices or len(discipline_ids) > campaign.max_choices:
@@ -38,7 +38,7 @@ def submit_choices(
         for c in old_choice_set.choices:
             session.delete(c)
         choice_set = old_choice_set
-        choice_set.updated_at = datetime.utcnow()
+        choice_set.updated_at = datetime.now(timezone.utc)
     else:
         choice_set = ChoiceSet(user_id=current_user.id, campaign_id=campaign.id)
     

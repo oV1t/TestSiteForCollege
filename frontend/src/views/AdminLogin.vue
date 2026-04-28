@@ -82,7 +82,8 @@ const handleLogin = async () => {
   background-attachment: fixed;
 }
 .login-card {
-  width: 400px;
+  width: 90%;
+  max-width: 400px;
 }
 .card-header h2 {
   margin: 0;

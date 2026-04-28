@@ -2,14 +2,14 @@
   <el-container class="main-layout">
     <el-header class="header">
       <div class="logo">
-        <img src="../assets/logo.svg" alt="ElectiveChoice" style="height: 40px; display: block;" />
+        <img src="../assets/logo.svg" alt="Вибір дисциплін" style="height: 40px; display: block;" />
       </div>
       <el-menu mode="horizontal" router :default-active="$route.path" class="menu" :key="isAdmin">
         <template v-if="isAdmin === false">
-          <el-menu-item index="/catalog">Catalog</el-menu-item>
-          <el-menu-item index="/my-choices">My Choices</el-menu-item>
+          <el-menu-item index="/catalog">Каталог</el-menu-item>
+          <el-menu-item index="/my-choices">Мій вибір</el-menu-item>
         </template>
-        <el-menu-item v-if="isAdmin === true" index="/admin">Admin Panel</el-menu-item>
+        <el-menu-item v-if="isAdmin === true" index="/admin">Адмін-панель</el-menu-item>
       </el-menu>
       <div class="user-info">
         <div class="profile-pill" @click="$router.push('/profile')">
@@ -17,10 +17,10 @@
             {{ auth.user?.full_name?.charAt(0)?.toUpperCase() || 'U' }}
           </el-avatar>
           <span class="user-name">
-            {{ auth.user?.full_name || 'Profile' }}
+            {{ auth.user?.full_name || 'Профіль' }}
           </span>
         </div>
-        <el-tooltip content="Logout" placement="bottom">
+        <el-tooltip content="Вийти" placement="bottom">
           <el-button class="logout-btn" circle @click="logout">
             <LogOut :size="16" />
           </el-button>
@@ -57,6 +57,7 @@ const logout = () => {
   justify-content: space-between;
   border-bottom: 1px solid #ddd;
   background-color: #fff;
+  padding: 0 1rem;
 }
 .logo {
   font-size: 1.5rem;
@@ -65,8 +66,9 @@ const logout = () => {
 }
 .menu {
   flex-grow: 1;
-  margin-left: 2rem;
+  margin-left: 1rem;
   border-bottom: none;
+  min-width: 0;
 }
 .user-info {
   display: flex;
@@ -111,5 +113,27 @@ const logout = () => {
   background-color: #fef0f0;
   color: #f56c6c;
   transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 0.5rem;
+  }
+  .logo img {
+    height: 32px !important;
+  }
+  .menu {
+    margin-left: 0.5rem;
+  }
+  :deep(.el-menu-item) {
+    padding: 0 10px;
+    font-size: 14px;
+  }
+  .user-name {
+    display: none;
+  }
+  .profile-pill {
+    padding: 4px;
+  }
 }
 </style>

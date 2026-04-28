@@ -254,6 +254,18 @@ const submitChoices = async () => {
   font-size: 1.1rem;
 }
 
+@media (max-width: 768px) {
+  .catalog {
+    padding: 1rem;
+  }
+  .catalog-header h1 {
+    font-size: 1.75rem;
+  }
+  .catalog-header p {
+    font-size: 1rem;
+  }
+}
+
 .catalog-filters {
   display: flex;
   flex-direction: column;
@@ -470,6 +482,19 @@ const submitChoices = async () => {
   box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4) !important;
 }
 
+@media (max-width: 768px) {
+  .selection-fab {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+  }
+  .submit-fab {
+    width: 100%;
+    height: 48px !important;
+    font-size: 1rem !important;
+  }
+}
+
 .confirm-list {
   padding: 10px 0;
 }
@@ -498,7 +523,6 @@ const submitChoices = async () => {
   justify-content: center;
   width: 28px;
   height: 28px;
-  background-color: #3b82f6;
   color: rgb(0, 0, 0);
   border-radius: 10%;
   font-weight: 700;

@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from enum import Enum
 from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
@@ -14,7 +14,7 @@ class User(SQLModel, table=True):
     group_name: Optional[str] = None
     role: UserRole = Field(default=UserRole.STUDENT)
     hashed_password: Optional[str] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     choice_sets: List["ChoiceSet"] = Relationship(back_populates="user")
 
@@ -33,7 +33,7 @@ class Discipline(SQLModel, table=True):
     competence_type: Optional[str] = None  # Тип компетентностей (Загальні/Спеціальні)
     
     active: bool = Field(default=True)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     choices: List["Choice"] = Relationship(back_populates="discipline")
 
@@ -52,8 +52,8 @@ class ChoiceSet(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     campaign_id: int = Field(foreign_key="campaign.id")
-    submitted_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     user: User = Relationship(back_populates="choice_sets")
     campaign: Campaign = Relationship(back_populates="choice_sets")

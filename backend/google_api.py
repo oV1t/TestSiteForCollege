@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 class GoogleAdminService:
     def __init__(self):
-        self.credentials_file = "/app/api/elective-disciplines-login-4f76699c1b32.json"
+        self.credentials_file = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "/app/api/elective-disciplines-login-4f76699c1b32.json")
         self.scopes = ["https://www.googleapis.com/auth/admin.directory.user.readonly"]
         self.service = None
 

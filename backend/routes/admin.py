@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 import io
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 import pandas as pd
 from models import Choice, ChoiceSet, User, Discipline, UserRole, Campaign
 from database import get_session
@@ -198,7 +198,7 @@ def update_discipline(
     for key, value in update_data.items():
         setattr(discipline, key, value)
     
-    discipline.updated_at = datetime.utcnow()
+    discipline.updated_at = datetime.now(timezone.utc)
     session.add(discipline)
     session.commit()
     session.refresh(discipline)
@@ -376,13 +376,22 @@ async def import_disciplines(
 
             doc_url = extracted_url or (str(row[url_col]).strip() if url_col and not pd.isna(row.get(url_col)) else None)
             
+            def safe_float(val):
+                if pd.isna(val) or val is None: return None
+                try:
+                    # Remove non-numeric characters except dot/comma
+                    s = "".join(c for c in str(val) if c.isdigit() or c in ".,")
+                    return float(s.replace(",", "."))
+                except:
+                    return None
+
             data = {
                 "title": str(row[title_col]).strip(),
                 "short_info": str(row.get('short_info', '')) if not pd.isna(row.get('short_info')) else None,
                 "doc_url": doc_url,
                 "commission_name": last_comm,
                 "spec": last_spec,
-                "credits": float(row[credits_col]) if credits_col and not pd.isna(row.get(credits_col)) else None,
+                "credits": safe_float(row.get(credits_col)),
                 "teacher": str(row[teacher_col]).strip() if teacher_col and not pd.isna(row.get(teacher_col)) else None,
                 "ctype": str(row[comp_col]).strip() if comp_col and not pd.isna(row.get(comp_col)) else None,
             }
@@ -395,7 +404,7 @@ async def import_disciplines(
                 discipline.credits = data["credits"]
                 discipline.teacher_name = data["teacher"]
                 discipline.competence_type = data["ctype"]
-                discipline.updated_at = datetime.utcnow()
+                discipline.updated_at = datetime.now(timezone.utc)
                 stats["updated"] += 1
             else:
                 new_disc = Discipline(

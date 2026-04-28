@@ -9,11 +9,13 @@ const router = createRouter({
             path: '/login',
             name: 'Login',
             component: () => import('../views/Login.vue'),
+            meta: { title: 'Вхід' }
         },
         {
             path: '/admin/login',
             name: 'AdminLogin',
             component: () => import('../views/AdminLogin.vue'),
+            meta: { title: 'Вхід для адміна' }
         },
         {
             path: '/',
@@ -30,22 +32,25 @@ const router = createRouter({
                     path: 'catalog',
                     name: 'Catalog',
                     component: () => import('../views/Catalog.vue'),
+                    meta: { title: 'Каталог дисциплін' }
                 },
                 {
                     path: 'my-choices',
                     name: 'MyChoices',
                     component: () => import('../views/MyChoices.vue'),
+                    meta: { title: 'Мій вибір' }
                 },
                 {
                     path: 'profile',
                     name: 'Profile',
                     component: () => import('../views/Profile.vue'),
+                    meta: { title: 'Профіль' }
                 },
                 {
                     path: 'admin',
                     name: 'Admin',
                     component: Admin,
-                    meta: { requiresAdmin: true },
+                    meta: { requiresAdmin: true, title: 'Панель адміністратора' },
                 },
             ],
         },
@@ -85,6 +90,11 @@ router.beforeEach(async (to, from, next) => {
         console.log('Access granted');
         next();
     }
+});
+ 
+router.afterEach((to) => {
+    const baseTitle = 'Вибір вибіркових дисциплін | РКІТ';
+    document.title = to.meta.title ? `${to.meta.title} — ${baseTitle}` : baseTitle;
 });
 
 export default router;
