@@ -67,7 +67,7 @@
         <div class="card-header">
           <h2>Аналітика вибору</h2>
           <div class="actions">
-            <el-button type="danger" plain @click="handleReset">Очистити всі вибори</el-button>
+
             <div class="export-controls">
               <el-input-number 
                 v-model="exportYear" 
@@ -205,15 +205,15 @@
     </el-tabs>
 
     <!-- Dialog for Create / Edit -->
-    <el-dialog :title="form.id ? 'Редагувати дисципліну' : 'Нова дисципліна'" v-model="dialogVisible" width="600px">
+    <el-dialog :title="form.id ? 'Редагувати дисципліну' : 'Нова дисципліна'" v-model="dialogVisible" class="admin-dialog">
       <el-form :model="form" label-position="top">
         <el-row :gutter="20">
-          <el-col :span="8">
+          <el-col :xs="24" :sm="8">
             <el-form-item label="Код дисципліни" required>
               <el-input v-model="form.code" placeholder="ВБ.01" />
             </el-form-item>
           </el-col>
-          <el-col :span="16">
+          <el-col :xs="24" :sm="16">
             <el-form-item label="Назва" required>
               <el-input v-model="form.title" placeholder="Повна назва" />
             </el-form-item>
@@ -221,19 +221,19 @@
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="Викладач">
               <el-input v-model="form.teacher_name" placeholder="ПІБ викладача" />
             </el-form-item>
           </el-col>
-          <el-col :span="6">
+          <el-col :xs="24" :sm="6">
             <el-form-item label="Кредити">
               <el-input-number v-model="form.credits" :min="0" :step="0.5" style="width: 100%" />
             </el-form-item>
           </el-col>
-          <el-col :span="6">
+          <el-col :xs="24" :sm="6">
             <el-form-item label="Тип">
-              <el-select v-model="form.competence_type" placeholder="Оберіть">
+              <el-select v-model="form.competence_type" placeholder="Оберіть" style="width: 100%">
                 <el-option label="Загальні" value="Загальні" />
                 <el-option label="Спеціальні" value="Спеціальні" />
               </el-select>
@@ -242,12 +242,12 @@
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="Циклова комісія (опц.)">
               <el-input v-model="form.commission_name" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="Шифр спеціальності (опц.)">
               <el-input v-model="form.specialty_code" />
             </el-form-item>
@@ -463,24 +463,7 @@ const saveDiscipline = async () => {
   }
 };
 
-const handleReset = () => {
-  ElMessageBox.confirm(
-    'Це видалить УСІ вибори студентів з бази даних. Ця дія незворотна. Продовжити?',
-    'Скидання системи',
-    {
-      confirmButtonText: 'Так, очистити все',
-      cancelButtonText: 'Скасувати',
-      type: 'error',
-    }
-  ).then(async () => {
-    try {
-      const res = await dataStore.resetChoices();
-      ElMessage.success(res.message);
-    } catch (error) {
-      ElMessage.error('Помилка при очищенні даних');
-    }
-  }).catch(() => {});
-};
+
 
 const handleDelete = (id) => {
   ElMessageBox.confirm('Ви впевнені, що хочете видалити цю дисципліну?', 'Увага', {
@@ -710,5 +693,16 @@ const handleDelete = (id) => {
   .year-picker {
     width: 100% !important;
   }
+  .admin-dialog {
+    width: 98% !important;
+    margin-top: 5vh !important;
+  }
+  .admin-dialog :deep(.el-dialog__body) {
+    padding: 15px 10px !important;
+  }
+}
+
+.admin-dialog {
+  width: 600px;
 }
 </style>

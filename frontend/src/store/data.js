@@ -102,11 +102,7 @@ export const useDataStore = defineStore('data', {
             await this.fetchAdminDisciplines();
             return response.data;
         },
-        async resetChoices() {
-            const response = await api.post('/admin/choices/clear');
-            await this.fetchStats();
-            return response.data;
-        },
+
         async exportCsv() {
             const response = await api.get('/admin/export/csv', { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([response.data]));

@@ -226,19 +226,7 @@ def delete_discipline(
         session.commit()
         return {"ok": True, "message": "Discipline deactivated (cannot be deleted due to existing student choices)"}
 
-@router.post("/choices/clear")
-def clear_all_choices(
-    session: Session = Depends(get_session),
-    admin: User = Depends(require_admin)
-):
-    try:
-        session.exec(SQLModel.metadata.tables["choice"].delete())
-        session.exec(SQLModel.metadata.tables["choiceset"].delete())
-        session.commit()
-        return {"ok": True, "message": "All student choices have been cleared"}
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 from fastapi import UploadFile, File
 import io
