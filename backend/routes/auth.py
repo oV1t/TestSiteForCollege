@@ -88,6 +88,7 @@ async def login_for_access_token(
 async def read_users_me(current_user: User = Depends(get_current_user)):
     user_data = current_user.model_dump(exclude={"hashed_password"})
     user_data["role"] = str(current_user.role.value if hasattr(current_user.role, 'value') else current_user.role)
+    user_data["picture_url"] = current_user.picture_url
     return user_data
 
 class UserUpdate(BaseModel):
@@ -130,6 +131,7 @@ async def google_verify(
         email = idinfo['email']
         # Google returns 'name' as full name
         google_name = idinfo.get('name', 'Google User')
+        google_picture = idinfo.get('picture')
         
     except ValueError:
         # Invalid token
@@ -168,6 +170,7 @@ async def google_verify(
             full_name=final_name,
             group_name=final_group or "Невідомо",
             role=UserRole.STUDENT,
+            picture_url=google_picture,
             hashed_password=None # Google users don't need a local password
         )
         session.add(user)
@@ -175,6 +178,7 @@ async def google_verify(
     else:
         # Update name and group if changed in Google
         user.full_name = final_name
+        user.picture_url = google_picture # Always update picture to latest from Google
         if final_group and user.group_name != final_group:
             user.group_name = final_group
             print(f"Updated data for {email}: {final_name}, {final_group}")
@@ -197,6 +201,7 @@ async def google_verify(
             "email": user.email,
             "full_name": user.full_name,
             "role": str(user.role.value if hasattr(user.role, 'value') else user.role),
-            "group_name": user.group_name
+            "group_name": user.group_name,
+            "picture_url": user.picture_url
         }
     }

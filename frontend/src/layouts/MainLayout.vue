@@ -13,7 +13,7 @@
       </el-menu>
       <div class="user-info">
         <div class="profile-pill" @click="$router.push('/profile')">
-          <el-avatar :size="32" class="avatar">
+          <el-avatar :size="32" class="avatar" :src="auth.user?.picture_url">
             {{ auth.user?.full_name?.charAt(0)?.toUpperCase() || 'U' }}
           </el-avatar>
           <span class="user-name">

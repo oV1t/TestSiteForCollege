@@ -13,6 +13,7 @@ class User(SQLModel, table=True):
     full_name: str
     group_name: Optional[str] = None
     role: UserRole = Field(default=UserRole.STUDENT)
+    picture_url: Optional[str] = Field(default=None)
     hashed_password: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

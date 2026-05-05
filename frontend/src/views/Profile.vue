@@ -2,8 +2,14 @@
   <div class="profile-container">
     <el-card class="profile-card">
       <template #header>
-        <div class="card-header">
-          <span>Мій профіль</span>
+        <div class="card-header profile-header">
+          <el-avatar :size="64" :src="auth.user?.picture_url" class="profile-avatar">
+            {{ auth.user?.full_name?.charAt(0)?.toUpperCase() || 'U' }}
+          </el-avatar>
+          <div class="header-text">
+            <span>Мій профіль</span>
+            <p class="role-badge">{{ auth.isAdmin ? 'Адміністратор' : 'Студент' }}</p>
+          </div>
         </div>
       </template>
       <el-form :model="form" :rules="rules" ref="profileForm" label-width="120px" @submit.prevent="submitForm">
@@ -86,5 +92,25 @@ const submitForm = async () => {
 .card-header {
   font-weight: bold;
   font-size: 1.2rem;
+}
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.profile-avatar {
+  background-color: #409eff;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+.role-badge {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: #909399;
 }
 </style>
