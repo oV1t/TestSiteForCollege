@@ -45,27 +45,50 @@ const handleGoogleResponse = async (response) => {
 };
 
 onMounted(() => {
-  // Initialize Google Identity Services
-  if (window.google) {
-    window.google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_REAL_CLIENT_ID_FROM_GOOGLE_CONSOLE",
-      callback: handleGoogleResponse,
-      auto_select: false,
-    });
+  const initGoogle = () => {
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_REAL_CLIENT_ID_FROM_GOOGLE_CONSOLE",
+        callback: handleGoogleResponse,
+        auto_select: false,
+      });
 
-    window.google.accounts.id.renderButton(
-      document.getElementById("googleButtonContainer"),
-      { 
-        theme: "outline", 
-        size: "large", 
-        width: "100%",
-        text: "signin_with",
-        shape: "rectangular"
+      const container = document.getElementById("googleButtonContainer");
+      if (container) {
+        window.google.accounts.id.renderButton(
+          container,
+          { 
+            theme: "outline", 
+            size: "large", 
+            width: "100%",
+            text: "signin_with",
+            shape: "rectangular"
+          }
+        );
+        
+        // Перевіряємо чи кнопка прогрузилася (контейнер не порожній) через 2 секунди
+        setTimeout(() => {
+          if (!container.innerHTML || container.innerHTML.trim() === "") {
+            console.warn("Кнопка Google не з'явилася в контейнері, перезавантаження...");
+            window.location.reload();
+          }
+        }, 2000);
       }
-    );
-  } else {
-    console.error("Google Identity Services script not loaded");
-  }
+    } else {
+      // Якщо скрипт ще завантажується, пробуємо знову через 500мс
+      setTimeout(initGoogle, 500);
+    }
+  };
+
+  initGoogle();
+
+  // Резервний перезапуск через 5 секунд, якщо об'єкт google так і не з'явився
+  setTimeout(() => {
+    if (!window.google) {
+      console.error("Google Identity Services script failed to load, reloading page...");
+      window.location.reload();
+    }
+  }, 5000);
 });
 </script>
 
