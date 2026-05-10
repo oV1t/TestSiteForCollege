@@ -52,27 +52,27 @@ export const useDataStore = defineStore('data', {
             return true;
         },
         async fetchDisciplines() {
-            const response = await api.get('/disciplines');
+            const response = await api.get('/disciplines/');
             this.disciplines = this.sortList(response.data);
         },
         async fetchMyChoices() {
-            const response = await api.get('/choices/my');
+            const response = await api.get('/choices/my/');
             this.myChoices = response.data;
         },
         async submitChoices(disciplineIds) {
-            await api.post('/choices/submit', disciplineIds);
+            await api.post('/choices/submit/', disciplineIds);
             this.selectedIds = [];
             await this.fetchMyChoices();
         },
         async fetchStats() {
-            const response = await api.get('/admin/stats');
+            const response = await api.get('/admin/stats/');
             this.stats = response.data;
             if (this.stats?.discipline_stats) {
                 this.stats.discipline_stats = this.sortList(this.stats.discipline_stats);
             }
         },
         async fetchAdminDisciplines() {
-            const response = await api.get('/admin/disciplines');
+            const response = await api.get('/admin/disciplines/');
             this.adminDisciplines = this.sortList(response.data);
         },
         sortList(list) {
@@ -81,7 +81,7 @@ export const useDataStore = defineStore('data', {
             return [...list].sort((a, b) => collator.compare(a.code || '', b.code || ''));
         },
         async createDiscipline(data) {
-            await api.post('/admin/disciplines', data);
+            await api.post('/admin/disciplines/', data);
             await this.fetchAdminDisciplines();
         },
         async updateDiscipline(id, data) {
@@ -96,7 +96,7 @@ export const useDataStore = defineStore('data', {
         async importDisciplines(file) {
             const formData = new FormData();
             formData.append('file', file);
-            const response = await api.post('/admin/disciplines/import', formData, {
+            const response = await api.post('/admin/disciplines/import/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             await this.fetchAdminDisciplines();

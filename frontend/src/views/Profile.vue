@@ -17,10 +17,10 @@
           <el-input v-model="auth.user.email" disabled></el-input>
         </el-form-item>
         <el-form-item label="ПІБ" prop="full_name">
-          <el-input v-model="form.full_name"></el-input>
+          <el-input v-model="form.full_name" disabled></el-input>
         </el-form-item>
         <el-form-item label="Група" prop="group_name" v-if="!auth.isAdmin">
-          <el-input v-model="form.group_name"></el-input>
+          <el-input v-model="form.group_name" disabled></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" native-type="submit" :loading="loading">Зберегти</el-button>

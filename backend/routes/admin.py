@@ -403,7 +403,8 @@ async def import_disciplines(
                     specialty_code=data["spec"],
                     credits=data["credits"],
                     teacher_name=data["teacher"],
-                    competence_type=data["ctype"]
+                    competence_type=data["ctype"],
+                    active=True
                 )
                 session.add(new_disc)
                 stats["created"] += 1
