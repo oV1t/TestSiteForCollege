@@ -494,6 +494,13 @@ const campaignForm = reactive({
 
 const formatDate = (d) => d ? new Date(d).toLocaleString('uk-UA') : '—';
 
+const toLocalISO = (d) => {
+  if (!d) return null;
+  const date = new Date(d);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
 const openCampaignDialog = (row = null) => {
   if (row) {
     campaignForm.id = row.id;
@@ -521,8 +528,8 @@ const saveCampaign = async () => {
   try {
     const payload = {
       name: campaignForm.name,
-      start_date: campaignForm.start_date,
-      end_date: campaignForm.end_date,
+      start_date: toLocalISO(campaignForm.start_date),
+      end_date: toLocalISO(campaignForm.end_date),
       min_choices: campaignForm.min_choices,
       max_choices: campaignForm.max_choices,
       active: campaignForm.active,
