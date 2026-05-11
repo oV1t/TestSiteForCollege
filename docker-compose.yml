@@ -24,7 +24,7 @@ services:
       - ./api:/app/api
     environment:
       - DATABASE_URL=postgresql://postgres:PASSWORD@postgres:5432/elective_disciplines
-      - GOOGLE_CLIENT_ID=
+      - GOOGLE_CLIENT_ID=380723671869-tevnm5m39l6lr1hqd8kk65daurg03kh4.apps.googleusercontent.com
     depends_on:
       - postgres
     ports:
@@ -37,7 +37,7 @@ services:
     build: 
       context: ./frontend
       args:
-        - VITE_GOOGLE_CLIENT_ID=
+        - VITE_GOOGLE_CLIENT_ID=380723671869-tevnm5m39l6lr1hqd8kk65daurg03kh4.apps.googleusercontent.com
     container_name: frontend_web
     depends_on:
       - backend

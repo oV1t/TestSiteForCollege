@@ -101,44 +101,16 @@ def seed_data():
             Discipline(code="ВК-72", title="Основи психології та етика ділових відносин", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/72", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
             Discipline(code="ВК-73", title="Друга іноземна мова (польська)", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/73", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
             Discipline(code="ВК-74", title="Сучасне красномовство", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/74", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-75", title="Сучасні способи переробки органічної сировини різного походження", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/75", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-76", title="Криптовалюти та віртуальні біржі", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/76", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-77", title="Управління персоналом", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/77", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-78", title="Грошово-кредитна політика", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/78", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-79", title="Органічні харчові продукти спеціального призначення", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/79", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-80", title="Регулювання використання харчових добавок в різних технологіях", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/80", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-81", title="Цифрові технології в харчовій галузі", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/81", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-82", title="Фінансова грамотність", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/82", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
+            Discipline(code="ВК-83", title="Компанія", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/83", commission_name="ЦК Загальноосвітніх дисциплін", specialty_code="GEN"),
         ]
-        for d in disciplines:
-            session.add(d)
-
-        # Create Sample Students
-        default_password = get_password_hash("password123")
-        students = [
-            User(email="student1@rcit.ukr.education", full_name="Іваненко Іван", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student2@rcit.ukr.education", full_name="Петренко Петро", group_name="КН-21", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student3@rcit.ukr.education", full_name="Сидоренко Марія", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student4@rcit.ukr.education", full_name="Коваленко Олена", group_name="ПР-32", role=UserRole.STUDENT, hashed_password=default_password),
-            User(email="student5@rcit.ukr.education", full_name="Бондаренко Андрій", group_name="КС-41", role=UserRole.STUDENT, hashed_password=default_password),
-        ]
-        for s in students:
-            session.add(s)
-
-        session.commit()
-        print("Database seeded with Ukrainian data successfully")
-Discipline(code="ВК-65", title="Основи інтернету речей та програмування пристроїв", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/65"),
-        Discipline(code="ВК-66", title="Геймдизайн та програмування ігрових застосунків", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/66"),
-        Discipline(code="ВК-67", title="Штучний інтелект та методи машинного навчання", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/67"),
-        Discipline(code="ВК-68", title="Архітектура програмних систем", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/68"),
-        Discipline(code="ВК-69", title="Статистичні методи аналізу даних", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/69"),
-        Discipline(code="ВК-70", title="Компонентно-орієнтоване програмування", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/70"),
-        Discipline(code="ВК-71", title="Дата інженерія та опрацювання даних", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/71"),
-        Discipline(code="ВК-72", title="Основи психології та етика ділових відносин", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/72"),
-        Discipline(code="ВК-73", title="Друга іноземна мова (польська)", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/73"),
-        Discipline(code="ВК-74", title="Сучасне красномовство", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/74"),
-        Discipline(code="ВК-75", title="Сучасні способи переробки органічної сировини різного походження", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/75"),
-        Discipline(code="ВК-76", title="Криптовалюти та віртуальні біржі", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/76"),
-        Discipline(code="ВК-77", title="Управління персоналом", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/77"),
-        Discipline(code="ВК-78", title="Грошово-кредитна політика", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/78"),
-        Discipline(code="ВК-79", title="Органічні харчові продукти спеціального призначення", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/79"),
-        Discipline(code="ВК-80", title="Регулювання використання харчових добавок в різних технологіях", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/80"),
-        Discipline(code="ВК-81", title="Цифрові технології в харчовій галузі", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/81"),
-        Discipline(code="ВК-82", title="Фінансова грамотність", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/82"),
-        Discipline(code="ВК-83", title="Компанія", short_info="Дисципліна за вибором", doc_url="https://docs.google.com/document/d/83"),            
-       ]
         for d in disciplines:
             session.add(d)
 
