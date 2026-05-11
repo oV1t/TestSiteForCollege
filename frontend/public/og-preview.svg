@@ -1,0 +1,45 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4f46e5"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.15)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.05)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="1100" cy="80" r="200" fill="white" opacity="0.04"/>
+  <circle cx="950" cy="500" r="280" fill="white" opacity="0.04"/>
+  <circle cx="100" cy="550" r="180" fill="white" opacity="0.04"/>
+
+  <!-- Card -->
+  <rect x="80" y="120" width="1040" height="390" rx="24" fill="url(#card)" stroke="white" stroke-opacity="0.15" stroke-width="1.5"/>
+
+  <!-- Logo / Badge -->
+  <rect x="120" y="165" width="56" height="56" rx="12" fill="white" opacity="0.2"/>
+  <text x="148" y="202" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">🎓</text>
+
+  <!-- College name -->
+  <text x="194" y="190" font-family="Arial, sans-serif" font-size="18" fill="white" opacity="0.85">РЦПТ</text>
+  <text x="194" y="212" font-family="Arial, sans-serif" font-size="13" fill="white" opacity="0.55">Відокремлений структурний підрозділ</text>
+
+  <!-- Main title -->
+  <text x="120" y="295" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="white">Вибір вибіркових</text>
+  <text x="120" y="360" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="white">дисциплін</text>
+
+  <!-- Description -->
+  <text x="120" y="420" font-family="Arial, sans-serif" font-size="22" fill="white" opacity="0.75">Оберіть та подайте пріоритетні дисципліни для вашого навчання</text>
+
+  <!-- URL tag -->
+  <rect x="120" y="450" width="300" height="36" rx="18" fill="white" opacity="0.15"/>
+  <text x="270" y="473" font-family="Arial, sans-serif" font-size="15" fill="white" opacity="0.9" text-anchor="middle">rcit.kanban.co.ua</text>
+
+  <!-- Right side decoration -->
+  <text x="950" y="340" font-family="Arial, sans-serif" font-size="120" text-anchor="middle" opacity="0.12" fill="white">📚</text>
+</svg>
