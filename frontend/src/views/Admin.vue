@@ -69,16 +69,17 @@
           <div class="actions">
 
             <div class="export-controls">
-              <el-input-number 
-                v-model="exportYear" 
-                :min="2020" 
-                :max="2035" 
-                size="default" 
-                controls-position="right" 
+              <el-input-number
+                v-model="exportYear"
+                :min="2020"
+                :max="2035"
+                size="default"
+                controls-position="right"
                 class="year-picker"
               />
               <el-button type="primary" @click="handleExportXlsx">Експорт Excel</el-button>
               <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
+              <el-button type="danger" @click="confirmClearChoices = true">Очистити всі вибори</el-button>
             </div>
           </div>
         </div>
@@ -149,6 +150,37 @@
         </div>
       </el-tab-pane>
 
+      <el-tab-pane label="Кампанії">
+        <div class="card-header mb-10">
+          <h2>Кампанії вибору</h2>
+          <el-button type="primary" @click="openCampaignDialog()">Нова кампанія</el-button>
+        </div>
+        <el-table :data="dataStore.campaigns" border stripe>
+          <el-table-column prop="id" label="ID" width="60" align="center" />
+          <el-table-column prop="name" label="Назва" />
+          <el-table-column label="Початок" width="160">
+            <template #default="{ row }">{{ formatDate(row.start_date) }}</template>
+          </el-table-column>
+          <el-table-column label="Кінець" width="160">
+            <template #default="{ row }">{{ formatDate(row.end_date) }}</template>
+          </el-table-column>
+          <el-table-column label="Вибір (мін/макс)" width="140" align="center">
+            <template #default="{ row }">{{ row.min_choices }}–{{ row.max_choices }}</template>
+          </el-table-column>
+          <el-table-column label="Статус" width="100" align="center">
+            <template #default="{ row }">
+              <el-tag :type="row.active ? 'success' : 'info'">{{ row.active ? 'Активна' : 'Неактивна' }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="Дії" width="160" align="center">
+            <template #default="{ row }">
+              <el-button size="small" @click="openCampaignDialog(row)">Ред.</el-button>
+              <el-button size="small" type="danger" @click="handleDeleteCampaign(row.id)">Видалити</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+
       <el-tab-pane label="Управління дисциплінами">
         <div class="card-header mb-10">
           <h2>Дисципліни</h2>
@@ -203,6 +235,59 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <!-- Clear All Choices Confirmation -->
+    <el-dialog v-model="confirmClearChoices" title="Очистити всі вибори?" width="420px">
+      <p>Ця дія <strong>незворотна</strong> — всі вибори всіх студентів будуть видалені. Статистика обнулиться.</p>
+      <p>Введіть <strong>ОЧИСТИТИ</strong> для підтвердження:</p>
+      <el-input v-model="clearConfirmText" placeholder="ОЧИСТИТИ" />
+      <template #footer>
+        <el-button @click="confirmClearChoices = false; clearConfirmText = ''">Скасувати</el-button>
+        <el-button type="danger" :disabled="clearConfirmText !== 'ОЧИСТИТИ'" :loading="clearingChoices" @click="handleClearAllChoices">
+          Видалити всі вибори
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- Campaign Dialog -->
+    <el-dialog :title="campaignForm.id ? 'Редагувати кампанію' : 'Нова кампанія'" v-model="campaignDialogVisible" width="500px">
+      <el-form :model="campaignForm" label-position="top">
+        <el-form-item label="Назва кампанії" required>
+          <el-input v-model="campaignForm.name" placeholder="Вибір 2025/2026" />
+        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="Дата початку">
+              <el-date-picker v-model="campaignForm.start_date" type="datetime" placeholder="Початок" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Дата кінця">
+              <el-date-picker v-model="campaignForm.end_date" type="datetime" placeholder="Кінець" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="Мінімум дисциплін">
+              <el-input-number v-model="campaignForm.min_choices" :min="1" :max="10" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Максимум дисциплін">
+              <el-input-number v-model="campaignForm.max_choices" :min="1" :max="10" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="Статус">
+          <el-switch v-model="campaignForm.active" active-text="Активна" inactive-text="Неактивна" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="campaignDialogVisible = false">Скасувати</el-button>
+        <el-button type="primary" @click="saveCampaign" :loading="savingCampaign">Зберегти</el-button>
+      </template>
+    </el-dialog>
 
     <!-- Dialog for Create / Edit -->
     <el-dialog :title="form.id ? 'Редагувати дисципліну' : 'Нова дисципліна'" v-model="dialogVisible" class="admin-dialog">
@@ -376,7 +461,94 @@ const form = reactive({
 onMounted(() => {
   dataStore.fetchStats().catch(err => console.error('Failed to fetch stats:', err));
   dataStore.fetchAdminDisciplines().catch(err => console.error('Failed to fetch disciplines:', err));
+  dataStore.fetchCampaigns().catch(err => console.error('Failed to fetch campaigns:', err));
 });
+
+// Campaign management
+const confirmClearChoices = ref(false);
+const clearConfirmText = ref('');
+const clearingChoices = ref(false);
+
+const handleClearAllChoices = async () => {
+  clearingChoices.value = true;
+  try {
+    const res = await dataStore.clearAllChoices();
+    ElMessage.success(`Видалено ${res.deleted_choices} виборів`);
+    confirmClearChoices.value = false;
+    clearConfirmText.value = '';
+  } catch { ElMessage.error('Помилка при очищенні'); }
+  finally { clearingChoices.value = false; }
+};
+
+const campaignDialogVisible = ref(false);
+const savingCampaign = ref(false);
+const campaignForm = reactive({
+  id: null,
+  name: '',
+  start_date: new Date(),
+  end_date: new Date(),
+  min_choices: 2,
+  max_choices: 3,
+  active: true,
+});
+
+const formatDate = (d) => d ? new Date(d).toLocaleString('uk-UA') : '—';
+
+const openCampaignDialog = (row = null) => {
+  if (row) {
+    campaignForm.id = row.id;
+    campaignForm.name = row.name;
+    campaignForm.start_date = new Date(row.start_date);
+    campaignForm.end_date = new Date(row.end_date);
+    campaignForm.min_choices = row.min_choices;
+    campaignForm.max_choices = row.max_choices;
+    campaignForm.active = row.active;
+  } else {
+    campaignForm.id = null;
+    campaignForm.name = '';
+    campaignForm.start_date = new Date();
+    campaignForm.end_date = new Date();
+    campaignForm.min_choices = 2;
+    campaignForm.max_choices = 3;
+    campaignForm.active = true;
+  }
+  campaignDialogVisible.value = true;
+};
+
+const saveCampaign = async () => {
+  if (!campaignForm.name) { ElMessage.warning('Вкажіть назву кампанії'); return; }
+  savingCampaign.value = true;
+  try {
+    const payload = {
+      name: campaignForm.name,
+      start_date: campaignForm.start_date,
+      end_date: campaignForm.end_date,
+      min_choices: campaignForm.min_choices,
+      max_choices: campaignForm.max_choices,
+      active: campaignForm.active,
+    };
+    if (campaignForm.id) {
+      await dataStore.updateCampaign(campaignForm.id, payload);
+      ElMessage.success('Кампанію оновлено');
+    } else {
+      await dataStore.createCampaign(payload);
+      ElMessage.success('Кампанію створено');
+    }
+    campaignDialogVisible.value = false;
+  } catch { ElMessage.error('Помилка при збереженні кампанії'); }
+  finally { savingCampaign.value = false; }
+};
+
+const handleDeleteCampaign = (id) => {
+  ElMessageBox.confirm('Видалити кампанію?', 'Увага', {
+    confirmButtonText: 'Так', cancelButtonText: 'Ні', type: 'warning',
+  }).then(async () => {
+    try {
+      await dataStore.deleteCampaign(id);
+      ElMessage.success('Кампанію видалено');
+    } catch { ElMessage.error('Помилка при видаленні'); }
+  }).catch(() => {});
+};
 
 const exportCsv = async () => {
   try {

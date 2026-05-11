@@ -143,6 +143,80 @@ def export_choices_xlsx(
 from pydantic import BaseModel
 from typing import Optional
 
+# --- Clear All Choices ---
+
+@router.delete("/choices/all")
+def clear_all_choices(session: Session = Depends(get_session), admin: User = Depends(require_admin)):
+    choices_deleted = len(session.exec(select(Choice)).all())
+    for c in session.exec(select(Choice)).all():
+        session.delete(c)
+    for cs in session.exec(select(ChoiceSet)).all():
+        session.delete(cs)
+    session.commit()
+    return {"ok": True, "deleted_choices": choices_deleted}
+
+# --- Campaign Management ---
+
+class CampaignCreate(BaseModel):
+    name: str
+    start_date: datetime
+    end_date: datetime
+    min_choices: int = 2
+    max_choices: int = 3
+    active: bool = True
+
+class CampaignUpdate(BaseModel):
+    name: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    min_choices: Optional[int] = None
+    max_choices: Optional[int] = None
+    active: Optional[bool] = None
+
+@router.get("/campaigns")
+def get_campaigns(session: Session = Depends(get_session), admin: User = Depends(require_admin)):
+    return session.exec(select(Campaign).order_by(Campaign.id.desc())).all()
+
+@router.post("/campaigns", response_model=Campaign)
+def create_campaign(data: CampaignCreate, session: Session = Depends(get_session), admin: User = Depends(require_admin)):
+    if data.active:
+        # deactivate all others
+        for c in session.exec(select(Campaign).where(Campaign.active == True)).all():
+            c.active = False
+            session.add(c)
+    campaign = Campaign(**data.model_dump())
+    session.add(campaign)
+    session.commit()
+    session.refresh(campaign)
+    return campaign
+
+@router.put("/campaigns/{campaign_id}", response_model=Campaign)
+def update_campaign(campaign_id: int, data: CampaignUpdate, session: Session = Depends(get_session), admin: User = Depends(require_admin)):
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if data.active:
+        for c in session.exec(select(Campaign).where(Campaign.active == True, Campaign.id != campaign_id)).all():
+            c.active = False
+            session.add(c)
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(campaign, key, value)
+    session.add(campaign)
+    session.commit()
+    session.refresh(campaign)
+    return campaign
+
+@router.delete("/campaigns/{campaign_id}")
+def delete_campaign(campaign_id: int, session: Session = Depends(get_session), admin: User = Depends(require_admin)):
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    session.delete(campaign)
+    session.commit()
+    return {"ok": True}
+
+# --- Discipline Management ---
+
 class DisciplineCreate(BaseModel):
     code: str
     title: str
