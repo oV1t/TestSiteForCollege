@@ -12,6 +12,9 @@ router = APIRouter()
 def get_active_campaign(session: Session = Depends(get_session)):
     campaign = session.exec(select(Campaign).where(Campaign.active == True)).first()
     if not campaign:
+        # Fall back to most recent campaign
+        campaign = session.exec(select(Campaign).order_by(Campaign.id.desc())).first()
+    if not campaign:
         return None
     return {
         "id": campaign.id,
@@ -20,6 +23,7 @@ def get_active_campaign(session: Session = Depends(get_session)):
         "end_date": campaign.end_date,
         "min_choices": campaign.min_choices,
         "max_choices": campaign.max_choices,
+        "active": campaign.active,
     }
 
 @router.post("/submit")
@@ -83,8 +87,9 @@ def get_my_choices(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    # Get active campaign
     campaign = session.exec(select(Campaign).where(Campaign.active == True)).first()
+    if not campaign:
+        campaign = session.exec(select(Campaign).order_by(Campaign.id.desc())).first()
     if not campaign:
         return []
 

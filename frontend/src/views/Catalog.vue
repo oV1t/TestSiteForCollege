@@ -2,15 +2,15 @@
   <div class="catalog">
     <div class="catalog-header">
       <h1>Каталог вибіркових дисциплін</h1>
-      <p v-if="dataStore.activeCampaign">
+      <p v-if="isCampaignActive">
         Оберіть від {{ dataStore.activeCampaign.min_choices }} до {{ dataStore.activeCampaign.max_choices }} пріоритетних дисциплін
       </p>
-      <p v-else>Оберіть пріоритетні дисципліни для вашого навчання</p>
+      <p v-else>Перегляд каталогу дисциплін</p>
     </div>
 
-    <!-- Campaign banner -->
+    <!-- Active campaign banner -->
     <el-alert
-      v-if="dataStore.activeCampaign"
+      v-if="isCampaignActive"
       class="campaign-banner"
       :title="dataStore.activeCampaign.name"
       type="success"
@@ -22,6 +22,30 @@
         Необхідно обрати: від <strong>{{ dataStore.activeCampaign.min_choices }}</strong> до <strong>{{ dataStore.activeCampaign.max_choices }}</strong> дисциплін
       </template>
     </el-alert>
+
+    <!-- Ended campaign + results -->
+    <template v-else-if="dataStore.activeCampaign">
+      <el-alert
+        class="campaign-banner"
+        :title="`Кампанія «${dataStore.activeCampaign.name}» завершилась ${formatDate(dataStore.activeCampaign.end_date)}`"
+        type="info"
+        :closable="false"
+        show-icon
+      >
+        <template #default>Прийом заявок закрито. Нижче відображено каталог дисциплін для ознайомлення.</template>
+      </el-alert>
+      <div v-if="dataStore.myChoices.length > 0" class="past-results">
+        <h3 class="past-results-title">Ваш вибір у цій кампанії</h3>
+        <div v-for="item in dataStore.myChoices" :key="item.priority" class="past-result-item">
+          <span class="priority-badge">{{ item.priority }}</span>
+          <span>{{ item.discipline.title }}</span>
+          <el-tag size="small" type="info">{{ item.discipline.code }}</el-tag>
+        </div>
+      </div>
+      <el-alert v-else class="campaign-banner" type="warning" title="Ви не подавали заявку в цій кампанії" :closable="false" show-icon />
+    </template>
+
+    <!-- No campaign at all -->
     <el-alert
       v-else
       class="campaign-banner"
@@ -240,6 +264,8 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('uk-UA') : '';
 const countdown = ref('');
 let timerInterval = null;
 
+const isCampaignActive = computed(() => dataStore.activeCampaign?.active === true);
+
 const isDeadlineToday = computed(() => {
   const end = dataStore.activeCampaign?.end_date;
   if (!end) return false;
@@ -271,6 +297,7 @@ onMounted(() => {
       timerInterval = setInterval(updateCountdown, 1000);
     }
   });
+  dataStore.fetchMyChoices();
 });
 
 onUnmounted(() => {
@@ -325,6 +352,33 @@ const submitChoices = async () => {
 
 .deadline-banner {
   margin-bottom: 1.5rem;
+}
+
+.past-results {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.past-results-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.past-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e0f2fe;
+}
+
+.past-result-item:last-child {
+  border-bottom: none;
 }
 
 .countdown {
