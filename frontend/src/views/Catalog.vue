@@ -2,8 +2,34 @@
   <div class="catalog">
     <div class="catalog-header">
       <h1>Каталог вибіркових дисциплін</h1>
-      <p>Оберіть 2 або 3 пріоритетні дисципліни для вашого навчання</p>
+      <p v-if="dataStore.activeCampaign">
+        Оберіть від {{ dataStore.activeCampaign.min_choices }} до {{ dataStore.activeCampaign.max_choices }} пріоритетних дисциплін
+      </p>
+      <p v-else>Оберіть пріоритетні дисципліни для вашого навчання</p>
     </div>
+
+    <!-- Campaign banner -->
+    <el-alert
+      v-if="dataStore.activeCampaign"
+      class="campaign-banner"
+      :title="dataStore.activeCampaign.name"
+      type="success"
+      :closable="false"
+      show-icon
+    >
+      <template #default>
+        Термін подання: {{ formatDate(dataStore.activeCampaign.start_date) }} — {{ formatDate(dataStore.activeCampaign.end_date) }} &nbsp;|&nbsp;
+        Необхідно обрати: від <strong>{{ dataStore.activeCampaign.min_choices }}</strong> до <strong>{{ dataStore.activeCampaign.max_choices }}</strong> дисциплін
+      </template>
+    </el-alert>
+    <el-alert
+      v-else
+      class="campaign-banner"
+      title="Наразі немає активної кампанії вибору"
+      type="warning"
+      :closable="false"
+      show-icon
+    />
 
     <!-- Filters Section -->
     <div class="catalog-filters">
@@ -193,14 +219,18 @@ const resetFilters = () => {
   selectedSpecialty.value = '';
 };
 
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('uk-UA') : '';
+
 onMounted(() => {
   dataStore.fetchDisciplines();
+  dataStore.fetchActiveCampaign();
 });
 
 const toggleSelection = (id) => {
   const success = dataStore.toggleSelection(id);
   if (!success) {
-    ElMessage.warning('Максимум можна обрати 3 дисципліни');
+    const max = dataStore.activeCampaign?.max_choices ?? 3;
+    ElMessage.warning(`Максимум можна обрати ${max} дисципліни`);
   }
 };
 
@@ -213,8 +243,9 @@ const openDoc = (url) => {
 };
 
 const submitChoices = async () => {
-  if (dataStore.selectedIds.length < 2) {
-    ElMessage.warning('Оберіть принаймні 2 дисципліни');
+  const min = dataStore.activeCampaign?.min_choices ?? 2;
+  if (dataStore.selectedIds.length < min) {
+    ElMessage.warning(`Оберіть принаймні ${min} дисципліни`);
     return;
   }
   submitting.value = true;
@@ -235,6 +266,10 @@ const submitChoices = async () => {
   padding: 2rem;
   background-color: #f8fafc;
   min-height: calc(100vh - 60px);
+}
+
+.campaign-banner {
+  margin-bottom: 1.5rem;
 }
 
 .catalog-header {

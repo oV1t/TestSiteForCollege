@@ -8,6 +8,20 @@ from datetime import datetime, timezone
 
 router = APIRouter()
 
+@router.get("/campaign")
+def get_active_campaign(session: Session = Depends(get_session)):
+    campaign = session.exec(select(Campaign).where(Campaign.active == True)).first()
+    if not campaign:
+        return None
+    return {
+        "id": campaign.id,
+        "name": campaign.name,
+        "start_date": campaign.start_date,
+        "end_date": campaign.end_date,
+        "min_choices": campaign.min_choices,
+        "max_choices": campaign.max_choices,
+    }
+
 @router.post("/submit")
 def submit_choices(
     discipline_ids: List[int] = Body(...),

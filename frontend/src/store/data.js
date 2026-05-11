@@ -9,10 +9,11 @@ export const useDataStore = defineStore('data', {
         selectedIds: [],
         stats: null,
         campaigns: [],
+        activeCampaign: null,
     }),
     getters: {
         isSelected: (state) => (id) => state.selectedIds.includes(id),
-        canAddMore: (state) => state.selectedIds.length < 3,
+        canAddMore: (state) => state.selectedIds.length < (state.activeCampaign?.max_choices ?? 3),
         allSpecialties: (state) => {
             const combined = [...state.disciplines, ...state.adminDisciplines];
             const specs = combined
@@ -51,6 +52,10 @@ export const useDataStore = defineStore('data', {
                 return false; // Max reached
             }
             return true;
+        },
+        async fetchActiveCampaign() {
+            const response = await api.get('/choices/campaign');
+            this.activeCampaign = response.data;
         },
         async fetchDisciplines() {
             const response = await api.get('/disciplines');
