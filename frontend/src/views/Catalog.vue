@@ -31,6 +31,22 @@
       show-icon
     />
 
+    <!-- Deadline warning -->
+    <el-alert
+      v-if="isDeadlineToday"
+      class="deadline-banner"
+      type="error"
+      :closable="false"
+      show-icon
+    >
+      <template #title>
+        🔔 Сьогодні останній день подання заявки!
+      </template>
+      <template #default>
+        До кінця прийому залишилось: <strong class="countdown">{{ countdown }}</strong>
+      </template>
+    </el-alert>
+
     <!-- Filters Section -->
     <div class="catalog-filters">
       <div class="filter-group-primary">
@@ -186,7 +202,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useDataStore } from '../store/data';
 import { ElMessage } from 'element-plus';
 import { User, Link, UserFilled, Search, School } from '@element-plus/icons-vue';
@@ -221,9 +237,44 @@ const resetFilters = () => {
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('uk-UA') : '';
 
+const countdown = ref('');
+let timerInterval = null;
+
+const isDeadlineToday = computed(() => {
+  const end = dataStore.activeCampaign?.end_date;
+  if (!end) return false;
+  const endDate = new Date(end);
+  const now = new Date();
+  return endDate.getFullYear() === now.getFullYear() &&
+    endDate.getMonth() === now.getMonth() &&
+    endDate.getDate() === now.getDate();
+});
+
+function updateCountdown() {
+  const end = dataStore.activeCampaign?.end_date;
+  if (!end) return;
+  const endDate = new Date(end);
+  const endOfDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+  const diff = endOfDay - new Date();
+  if (diff <= 0) { countdown.value = '00:00:00'; return; }
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  countdown.value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 onMounted(() => {
   dataStore.fetchDisciplines();
-  dataStore.fetchActiveCampaign();
+  dataStore.fetchActiveCampaign().then(() => {
+    if (isDeadlineToday.value) {
+      updateCountdown();
+      timerInterval = setInterval(updateCountdown, 1000);
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (timerInterval) clearInterval(timerInterval);
 });
 
 const toggleSelection = (id) => {
@@ -269,7 +320,17 @@ const submitChoices = async () => {
 }
 
 .campaign-banner {
+  margin-bottom: 1rem;
+}
+
+.deadline-banner {
   margin-bottom: 1.5rem;
+}
+
+.countdown {
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
 }
 
 .catalog-header {
