@@ -73,6 +73,8 @@ def get_stats(
     }
 
 def _compute_group_top(session: Session):
+    EXCLUDED_GROUPS = {"teacher", "невідомо", "інформатика", "кт"}
+
     group_totals = dict(
         session.exec(
             select(User.group_name, func.count(User.id).label("cnt"))
@@ -80,6 +82,7 @@ def _compute_group_top(session: Session):
             .group_by(User.group_name)
         ).all()
     )
+    group_totals = {g: c for g, c in group_totals.items() if g.lower() not in EXCLUDED_GROUPS}
     all_groups = sorted(group_totals.keys())
 
     rows = session.exec(
