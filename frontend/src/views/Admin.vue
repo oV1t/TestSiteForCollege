@@ -119,7 +119,7 @@
             <el-table-column prop="priority1" label="Пріор. 1" width="100" align="center" />
             <el-table-column prop="priority2" label="Пріор. 2" width="100" align="center" />
             <el-table-column prop="priority3" label="Пріор. 3" width="100" align="center" />
-            <el-table-column prop="total" label="Всього" width="80" align="center" />
+            <el-table-column prop="total" label="Всього" width="80" align="center" sortable />
           </el-table>
         </div>
 
@@ -147,6 +147,51 @@
         </div>
         <div class="summary" v-if="dataStore.stats">
           Всього студентів що зробили вибір: <strong>{{ dataStore.stats.total_participants }}</strong>
+        </div>
+
+        <!-- Group Top Section -->
+        <div class="section-divider">
+          <span>Топ дисциплін по групах</span>
+          <el-button type="primary" plain size="small" @click="handleExportGroupTop">Експорт Excel</el-button>
+        </div>
+
+        <div class="desktop-view">
+          <el-table :data="filteredGroupTopStats" border stripe>
+            <el-table-column prop="group" label="Група" width="120" />
+            <el-table-column prop="total_students" label="Студентів" width="100" align="center" />
+            <el-table-column label="Топ 1">
+              <template #default="{ row }">
+                <span v-if="row.top[0]">{{ row.top[0].title }} <el-tag size="small" type="success">{{ row.top[0].count }}</el-tag></span>
+                <span v-else class="no-data">—</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="Топ 2">
+              <template #default="{ row }">
+                <span v-if="row.top[1]">{{ row.top[1].title }} <el-tag size="small" type="info">{{ row.top[1].count }}</el-tag></span>
+                <span v-else class="no-data">—</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="Топ 3">
+              <template #default="{ row }">
+                <span v-if="row.top[2]">{{ row.top[2].title }} <el-tag size="small">{{ row.top[2].count }}</el-tag></span>
+                <span v-else class="no-data">—</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <div class="mobile-view">
+          <div v-for="row in filteredGroupTopStats" :key="row.group" class="mobile-stat-card">
+            <div class="stat-header">
+              <strong>{{ row.group }}</strong>
+              <el-tag size="small" type="info">{{ row.total_students }} студ.</el-tag>
+            </div>
+            <div v-for="(disc, i) in row.top" :key="disc.discipline_id" class="mobile-group-row">
+              <span>{{ i + 1 }}. {{ disc.title }}</span>
+              <strong>{{ disc.count }}</strong>
+            </div>
+            <div v-if="row.top.length === 0" class="no-data">Немає виборів</div>
+          </div>
         </div>
       </el-tab-pane>
 
@@ -402,6 +447,11 @@ const filteredStats = computed(() => {
   });
 });
 
+const filteredGroupTopStats = computed(() => {
+  if (!selectedGroup.value) return dataStore.groupTopStats;
+  return dataStore.groupTopStats.filter(g => g.group === selectedGroup.value);
+});
+
 const filteredAdminDisciplines = computed(() => {
   return dataStore.adminDisciplines.filter(item => {
     const s = searchQuery.value.toLowerCase();
@@ -462,6 +512,7 @@ onMounted(() => {
   dataStore.fetchStats().catch(err => console.error('Failed to fetch stats:', err));
   dataStore.fetchAdminDisciplines().catch(err => console.error('Failed to fetch disciplines:', err));
   dataStore.fetchCampaigns().catch(err => console.error('Failed to fetch campaigns:', err));
+  dataStore.fetchGroupTopStats().catch(err => console.error('Failed to fetch group top stats:', err));
 });
 
 // Campaign management
@@ -555,6 +606,15 @@ const handleDeleteCampaign = (id) => {
       ElMessage.success('Кампанію видалено');
     } catch { ElMessage.error('Помилка при видаленні'); }
   }).catch(() => {});
+};
+
+const handleExportGroupTop = async () => {
+  try {
+    await dataStore.exportGroupTop();
+    ElMessage.success('Експорт топ по групах розпочато');
+  } catch {
+    ElMessage.error('Помилка при експорті');
+  }
 };
 
 const exportCsv = async () => {
@@ -883,5 +943,21 @@ const handleDelete = (id) => {
 
 .admin-dialog {
   width: 600px;
+}
+
+.section-divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2rem 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.no-data {
+  color: #94a3b8;
 }
 </style>

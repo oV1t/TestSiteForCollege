@@ -10,6 +10,7 @@ export const useDataStore = defineStore('data', {
         stats: null,
         campaigns: [],
         activeCampaign: null,
+        groupTopStats: [],
     }),
     getters: {
         isSelected: (state) => (id) => state.selectedIds.includes(id),
@@ -144,6 +145,20 @@ export const useDataStore = defineStore('data', {
         async deleteCampaign(id) {
             await api.delete(`/admin/campaigns/${id}`);
             await this.fetchCampaigns();
+        },
+        async fetchGroupTopStats() {
+            const response = await api.get('/admin/stats/by-group');
+            this.groupTopStats = response.data;
+        },
+        async exportGroupTop() {
+            const response = await api.get('/admin/export/group-top', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'group_top_disciplines.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         },
         async clearAllChoices() {
             const response = await api.delete('/admin/choices/all');

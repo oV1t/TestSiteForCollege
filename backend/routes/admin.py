@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select, func, SQLModel
+from sqlalchemy import distinct as sql_distinct
 from sqlalchemy.exc import IntegrityError
 from typing import List
+from collections import defaultdict
 import io
 import csv
 from datetime import datetime, timezone
@@ -69,6 +71,85 @@ def get_stats(
         "total_participants": total_participants,
         "discipline_stats": stats
     }
+
+def _compute_group_top(session: Session):
+    rows = session.exec(
+        select(
+            User.group_name,
+            Discipline.id,
+            Discipline.title,
+            Discipline.code,
+            func.count(Choice.id).label("cnt"),
+        )
+        .join(ChoiceSet, ChoiceSet.user_id == User.id)
+        .join(Choice, Choice.choice_set_id == ChoiceSet.id)
+        .join(Discipline, Discipline.id == Choice.discipline_id)
+        .where(User.group_name.isnot(None))
+        .group_by(User.group_name, Discipline.id, Discipline.title, Discipline.code)
+        .order_by(User.group_name, func.count(Choice.id).desc())
+    ).all()
+
+    student_counts = dict(
+        session.exec(
+            select(
+                User.group_name,
+                func.count(sql_distinct(ChoiceSet.user_id)).label("cnt"),
+            )
+            .join(ChoiceSet, ChoiceSet.user_id == User.id)
+            .where(User.group_name.isnot(None))
+            .group_by(User.group_name)
+        ).all()
+    )
+
+    group_map = defaultdict(list)
+    for group_name, disc_id, title, code, cnt in rows:
+        group_map[group_name].append({"discipline_id": disc_id, "title": title, "code": code, "count": cnt})
+
+    return [
+        {
+            "group": group,
+            "total_students": student_counts.get(group, 0),
+            "top": group_map[group][:3],
+        }
+        for group in sorted(group_map.keys())
+    ]
+
+
+@router.get("/stats/by-group")
+def get_stats_by_group(
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin),
+):
+    return _compute_group_top(session)
+
+
+@router.get("/export/group-top")
+def export_group_top_xlsx(
+    session: Session = Depends(get_session),
+    admin: User = Depends(require_admin),
+):
+    data = _compute_group_top(session)
+    table_rows = []
+    for entry in data:
+        top = entry["top"]
+        table_rows.append({
+            "Група": entry["group"],
+            "Студентів": entry["total_students"],
+            "Топ 1": f"{top[0]['title']} ({top[0]['count']})" if len(top) > 0 else "",
+            "Топ 2": f"{top[1]['title']} ({top[1]['count']})" if len(top) > 1 else "",
+            "Топ 3": f"{top[2]['title']} ({top[2]['count']})" if len(top) > 2 else "",
+        })
+    df = pd.DataFrame(table_rows)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Топ по групах")
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=group_top_disciplines.xlsx"},
+    )
+
 
 @router.get("/export/csv")
 def export_choices_csv(
