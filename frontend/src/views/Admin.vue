@@ -160,8 +160,8 @@
             @click="selectedGroup = selectedGroup === row.group ? '' : row.group"
           >
             <div class="group-name">{{ row.group }}</div>
-            <div class="group-count">{{ row.total_students }}</div>
-            <div class="group-label">студ.</div>
+            <div class="group-count">{{ row.total_students }}<span class="group-count-total"> / {{ row.group_total }}</span></div>
+            <div class="group-label">студентів</div>
           </div>
           <div v-if="filteredGroupTopStats.length === 0" class="no-data" style="padding: 1rem;">
             Немає даних
@@ -1025,6 +1025,12 @@ const handleDelete = (id) => {
 
 .group-label {
   font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.group-count-total {
+  font-size: 1rem;
+  font-weight: 400;
   color: #94a3b8;
 }
 </style>

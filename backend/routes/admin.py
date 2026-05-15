@@ -73,11 +73,14 @@ def get_stats(
     }
 
 def _compute_group_top(session: Session):
-    all_groups = sorted(set(
-        g for (g,) in session.exec(
-            select(User.group_name).where(User.group_name.isnot(None))
+    group_totals = dict(
+        session.exec(
+            select(User.group_name, func.count(User.id).label("cnt"))
+            .where(User.group_name.isnot(None))
+            .group_by(User.group_name)
         ).all()
-    ))
+    )
+    all_groups = sorted(group_totals.keys())
 
     rows = session.exec(
         select(
@@ -115,6 +118,7 @@ def _compute_group_top(session: Session):
         {
             "group": group,
             "total_students": student_counts.get(group, 0),
+            "group_total": group_totals.get(group, 0),
             "top": group_map[group][:3],
         }
         for group in all_groups
