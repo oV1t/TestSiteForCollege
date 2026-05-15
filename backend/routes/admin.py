@@ -73,7 +73,7 @@ def get_stats(
     }
 
 def _compute_group_top(session: Session):
-    EXCLUDED_GROUPS = {"teacher", "невідомо", "інформатика", "кт"}
+    EXCLUDED_GROUPS = {"teacher", "невідомо", "інформатика і кт"}
 
     group_totals = dict(
         session.exec(
