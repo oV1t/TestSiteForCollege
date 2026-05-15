@@ -73,6 +73,12 @@ def get_stats(
     }
 
 def _compute_group_top(session: Session):
+    all_groups = sorted(set(
+        g for (g,) in session.exec(
+            select(User.group_name).where(User.group_name.isnot(None))
+        ).all()
+    ))
+
     rows = session.exec(
         select(
             User.group_name,
@@ -111,7 +117,7 @@ def _compute_group_top(session: Session):
             "total_students": student_counts.get(group, 0),
             "top": group_map[group][:3],
         }
-        for group in sorted(group_map.keys())
+        for group in all_groups
     ]
 
 
