@@ -149,6 +149,25 @@
           Всього студентів що зробили вибір: <strong>{{ dataStore.stats.total_participants }}</strong>
         </div>
 
+        <!-- Groups Summary -->
+        <div class="section-divider"><span>Вибори по групах</span></div>
+        <div class="groups-summary-grid">
+          <div
+            v-for="row in filteredGroupTopStats"
+            :key="row.group"
+            class="group-summary-card"
+            :class="{ 'group-summary-card--active': selectedGroup === row.group }"
+            @click="selectedGroup = selectedGroup === row.group ? '' : row.group"
+          >
+            <div class="group-name">{{ row.group }}</div>
+            <div class="group-count">{{ row.total_students }}</div>
+            <div class="group-label">студ.</div>
+          </div>
+          <div v-if="filteredGroupTopStats.length === 0" class="no-data" style="padding: 1rem;">
+            Немає даних
+          </div>
+        </div>
+
         <!-- Group Top Section -->
         <div class="section-divider">
           <span>Топ дисциплін по групах</span>
@@ -958,6 +977,54 @@ const handleDelete = (id) => {
 }
 
 .no-data {
+  color: #94a3b8;
+}
+
+.groups-summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.group-summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 90px;
+}
+
+.group-summary-card:hover {
+  border-color: #409eff;
+  background: #ecf5ff;
+}
+
+.group-summary-card--active {
+  border-color: #409eff;
+  background: #ecf5ff;
+}
+
+.group-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.group-count {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #409eff;
+  line-height: 1.2;
+}
+
+.group-label {
+  font-size: 0.75rem;
   color: #94a3b8;
 }
 </style>
