@@ -160,10 +160,12 @@ export const useDataStore = defineStore('data', {
             link.click();
             document.body.removeChild(link);
         },
-        async clearAllChoices() {
-            const response = await api.delete('/admin/choices/all');
-            await this.fetchStats();
-            return response.data;
+        async exportSelectedGroupTopToXlsx(data, groupName) {
+            const { Workbook, utils } = await import('xlsx');
+            const worksheet = utils.json_to_sheet(data);
+            const workbook = utils.book_new();
+            utils.book_append_sheet(workbook, worksheet, `${groupName}`);
+            utils.writeFile(workbook, `top_disciplines_${groupName}.xlsx`);
         },
     },
 });

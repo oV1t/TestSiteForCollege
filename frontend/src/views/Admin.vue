@@ -79,7 +79,6 @@
               />
               <el-button type="primary" @click="handleExportXlsx">Експорт Excel</el-button>
               <el-button type="success" @click="exportCsv">Експорт CSV</el-button>
-              <el-button type="danger" @click="confirmClearChoices = true">Очистити всі вибори</el-button>
             </div>
           </div>
         </div>
@@ -147,6 +146,35 @@
         </div>
         <div class="summary" v-if="dataStore.stats">
           Всього студентів що зробили вибір: <strong>{{ dataStore.stats.total_participants }}</strong>
+        </div>
+
+        <div v-if="selectedGroup">
+          <div class="section-divider">
+            <span>Топ-3 дисципліни для групи {{ selectedGroup }}</span>
+            <el-button type="primary" plain size="small" @click="handleExportSelectedGroupTop">Експорт Excel</el-button>
+          </div>
+          <div v-if="selectedGroupStats" style="margin-bottom: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 4px;">
+            <div style="font-size: 14px; color: #666;">
+              Студентів у групі які прогосували: <strong>{{ selectedGroupStats.total_students }} з {{ selectedGroupStats.group_total }}</strong>
+            </div>
+          </div>
+          <div class="selected-group-top" v-if="selectedGroupTop.length">
+            <el-row :gutter="20">
+              <el-col :span="8" v-for="(item, idx) in selectedGroupTop" :key="item.discipline_id">
+                <div class="top-card">
+                  <div class="top-card-rank">#{{ idx + 1 }}</div>
+                  <div class="top-card-title">{{ item.title }}</div>
+                  <div class="top-card-count">Вибрало: {{ item.count }} студентів</div>
+                  <div class="top-card-percentage" v-if="selectedGroupStats.total_students > 0">
+                    ({{ ((item.count / selectedGroupStats.total_students) * 100).toFixed(1) }}%)
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+          <div class="no-data" v-else style="padding: 1rem;">
+            Немає даних для обраної групи.
+          </div>
         </div>
 
         <!-- Groups Summary -->
@@ -299,19 +327,6 @@
         </div>
       </el-tab-pane>
     </el-tabs>
-
-    <!-- Clear All Choices Confirmation -->
-    <el-dialog v-model="confirmClearChoices" title="Очистити всі вибори?" width="420px">
-      <p>Ця дія <strong>незворотна</strong> — всі вибори всіх студентів будуть видалені. Статистика обнулиться.</p>
-      <p>Введіть <strong>ОЧИСТИТИ</strong> для підтвердження:</p>
-      <el-input v-model="clearConfirmText" placeholder="ОЧИСТИТИ" />
-      <template #footer>
-        <el-button @click="confirmClearChoices = false; clearConfirmText = ''">Скасувати</el-button>
-        <el-button type="danger" :disabled="clearConfirmText !== 'ОЧИСТИТИ'" :loading="clearingChoices" @click="handleClearAllChoices">
-          Видалити всі вибори
-        </el-button>
-      </template>
-    </el-dialog>
 
     <!-- Campaign Dialog -->
     <el-dialog :title="campaignForm.id ? 'Редагувати кампанію' : 'Нова кампанія'" v-model="campaignDialogVisible" width="500px">
@@ -471,6 +486,16 @@ const filteredGroupTopStats = computed(() => {
   return dataStore.groupTopStats.filter(g => g.group === selectedGroup.value);
 });
 
+const selectedGroupTop = computed(() => {
+  const group = dataStore.groupTopStats?.find(g => g.group === selectedGroup.value);
+  return group?.top || [];
+});
+
+const selectedGroupStats = computed(() => {
+  const group = dataStore.groupTopStats?.find(g => g.group === selectedGroup.value);
+  return group ? { total_students: group.total_students, group_total: group.group_total } : null;
+});
+
 const filteredAdminDisciplines = computed(() => {
   return dataStore.adminDisciplines.filter(item => {
     const s = searchQuery.value.toLowerCase();
@@ -535,21 +560,6 @@ onMounted(() => {
 });
 
 // Campaign management
-const confirmClearChoices = ref(false);
-const clearConfirmText = ref('');
-const clearingChoices = ref(false);
-
-const handleClearAllChoices = async () => {
-  clearingChoices.value = true;
-  try {
-    const res = await dataStore.clearAllChoices();
-    ElMessage.success(`Видалено ${res.deleted_choices} виборів`);
-    confirmClearChoices.value = false;
-    clearConfirmText.value = '';
-  } catch { ElMessage.error('Помилка при очищенні'); }
-  finally { clearingChoices.value = false; }
-};
-
 const campaignDialogVisible = ref(false);
 const savingCampaign = ref(false);
 const campaignForm = reactive({
@@ -631,6 +641,59 @@ const handleExportGroupTop = async () => {
   try {
     await dataStore.exportGroupTop();
     ElMessage.success('Експорт топ по групах розпочато');
+  } catch {
+    ElMessage.error('Помилка при експорті');
+  }
+};
+
+const handleExportSelectedGroupTop = async () => {
+  if (!selectedGroup.value || !selectedGroupTop.value.length) {
+    ElMessage.warning('Немає даних для експорту');
+    return;
+  }
+  try {
+    const totalStudents = selectedGroupStats.value?.total_students || 0;
+    const groupTotal = selectedGroupStats.value?.group_total || 0;
+    
+    const data = [{
+      'Група': selectedGroup.value,
+      'Всього студентів у групі': groupTotal,
+      'Студентів які прогосували': totalStudents,
+      'Ранг': '#1',
+      'Назва дисципліни': selectedGroupTop.value[0]?.title || '',
+      'Код': selectedGroupTop.value[0]?.code || '',
+      'Виборів': selectedGroupTop.value[0]?.count || 0,
+      'Відсоток': totalStudents > 0 ? `${((selectedGroupTop.value[0]?.count || 0) / totalStudents * 100).toFixed(1)}%` : '0%'
+    }];
+    
+    if (selectedGroupTop.value[1]) {
+      data.push({
+        'Група': selectedGroup.value,
+        'Всього студентів у групі': groupTotal,
+        'Студентів які прогосували': totalStudents,
+        'Ранг': '#2',
+        'Назва дисципліни': selectedGroupTop.value[1].title,
+        'Код': selectedGroupTop.value[1].code,
+        'Виборів': selectedGroupTop.value[1].count,
+        'Відсоток': totalStudents > 0 ? `${(selectedGroupTop.value[1].count / totalStudents * 100).toFixed(1)}%` : '0%'
+      });
+    }
+    
+    if (selectedGroupTop.value[2]) {
+      data.push({
+        'Група': selectedGroup.value,
+        'Всього студентів у групі': groupTotal,
+        'Студентів які прогосували': totalStudents,
+        'Ранг': '#3',
+        'Назва дисципліни': selectedGroupTop.value[2].title,
+        'Код': selectedGroupTop.value[2].code,
+        'Виборів': selectedGroupTop.value[2].count,
+        'Відсоток': totalStudents > 0 ? `${(selectedGroupTop.value[2].count / totalStudents * 100).toFixed(1)}%` : '0%'
+      });
+    }
+    
+    await dataStore.exportSelectedGroupTopToXlsx(data, selectedGroup.value);
+    ElMessage.success('Таблицю експортовано');
   } catch {
     ElMessage.error('Помилка при експорті');
   }

@@ -237,18 +237,6 @@ def export_choices_xlsx(
 from pydantic import BaseModel
 from typing import Optional
 
-# --- Clear All Choices ---
-
-@router.delete("/choices/all")
-def clear_all_choices(session: Session = Depends(get_session), admin: User = Depends(require_admin)):
-    choices_deleted = len(session.exec(select(Choice)).all())
-    for c in session.exec(select(Choice)).all():
-        session.delete(c)
-    for cs in session.exec(select(ChoiceSet)).all():
-        session.delete(cs)
-    session.commit()
-    return {"ok": True, "deleted_choices": choices_deleted}
-
 # --- Campaign Management ---
 
 class CampaignCreate(BaseModel):
