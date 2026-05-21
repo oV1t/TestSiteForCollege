@@ -142,23 +142,18 @@ async def google_verify(
         raise HTTPException(status_code=403, detail="Дозволено вхід тільки з корпоративною поштою @rcit.ukr.education")
 
     # Fetch info from Google Admin Directory
-    google_fullname, department, org_unit = google_admin.get_user_info(email)
-    
+    google_fullname, group_from_groups_api, org_unit = google_admin.get_user_info(email)
+
     # Prioritize name from verified token, fallback to Admin API
     final_name = google_name or google_fullname or "Google User"
 
-    # Use department (Group) or Fallback to OrgUnit if department is missing
-    # Assuming group might be part of the org_unit path if department is not set
-    final_group = department
+    # group_from_groups_api comes from Google Group memberships (authoritative).
+    # Fall back to orgUnitPath for users not yet added to academic groups.
+    final_group = group_from_groups_api
     if not final_group and org_unit:
-        # Example: "/Students/KN-21" -> we can try to extract "KN-21"
         parts = org_unit.strip("/").split("/")
         if len(parts) > 1:
-            final_group = parts[-1] 
-
-    # Transformation: ІПЗ-1(2) -> ІПЗ-1/2
-    if final_group:
-        final_group = final_group.replace('(', '/').replace(')', '')
+            final_group = parts[-1].replace('(', '/').replace(')', '')
 
     # Check if user exists
     user = session.exec(select(User).where(User.email == email)).first()
